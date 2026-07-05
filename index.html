@@ -1035,16 +1035,6 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
     <button class="ai-close" onclick="toggleAI()"><i class="fas fa-times"></i></button>
   </div>
   <div class="ai-body" id="aiBody">
-    <div class="ai-key-setup" id="aiKeySetup">
-      <div class="message bot">Para usar el asistente con IA, pega tu clave de Anthropic:</div>
-      <div style="display:flex;gap:6px;padding:4px 12px 12px">
-        <input type="password" id="aiKeyInput" placeholder="sk-ant-..." style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
-        <button onclick="saveAIKey()" style="padding:6px 12px;border:none;border-radius:6px;background:var(--accent2);color:#fff;cursor:pointer">Guardar</button>
-      </div>
-      <div style="padding:0 12px 8px;font-size:11px;color:var(--text2)">
-        <i class="fas fa-info-circle"></i> La clave se guarda localmente en tu navegador.
-      </div>
-    </div>
     <div class="message bot" id="aiWelcome">¡Hola! Pregúntame sobre tus archivos.</div>
     <div class="ai-loading" id="aiLoading"><span></span><span></span><span></span></div>
     <div class="quick-actions">
@@ -1065,7 +1055,7 @@ const CONFIG = {
   apiKey: 'AIzaSyAGloLcDRyDW62OW8INdwr-7rVfMJYUeg8',
   clientId: '952781470893-m8ndr82u3k8msvjcgl9cc9vqnce1lao6.apps.googleusercontent.com',
   rootFolder: '1AbXlMyDuzhOJZM7-uhlIy1as3J7OLI_A',
-  claudeKey: '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',
+  aiProxyUrl: '', // ← pon aquí la URL de tu Worker de Cloudflare, ej: 'https://nas-ai-proxy.tu-usuario.workers.dev'
 };
 
 let accessToken = null;
@@ -1634,16 +1624,6 @@ const AI_TEMP = 0.0;
 const AI_MAX_TOKENS = 8000;
 let aiMessages = [];
 
-function getAIKey() { return localStorage.getItem('nas-claude-key'); }
-function saveAIKey() {
-  const input = document.getElementById('aiKeyInput');
-  const key = input.value.trim();
-  if (!key || !key.startsWith('sk-ant-')) { showToast('Clave inválida (debe empezar con sk-ant-)', 'error'); return; }
-  localStorage.setItem('nas-claude-key', key);
-  document.getElementById('aiKeySetup').style.display = 'none';
-  showToast('Clave guardada', 'success');
-}
-
 function toggleAI() {
   const panel = document.getElementById('aiPanel');
   const fab = document.getElementById('aiFab');
@@ -1657,8 +1637,6 @@ function toggleAI() {
 
 function updateAIContext() {
   const body = document.getElementById('aiBody');
-  const setup = document.getElementById('aiKeySetup');
-  setup.style.display = getAIKey() ? 'none' : 'block';
   let ctx = body.querySelector('.context-info');
   if (!ctx) {
     ctx = document.createElement('div');
@@ -1719,11 +1697,8 @@ async function sendAIMessage() {
   const input = document.getElementById('aiInput');
   const text = input.value.trim();
   if (!text) return;
-
-  const key = getAIKey();
-  if (!key) {
-    showToast('Primero pega tu clave de Anthropic en el asistente', 'info');
-    document.getElementById('aiKeyInput').focus();
+  if (!CONFIG.aiProxyUrl) {
+    showToast('No hay URL de proxy configurada. Revisa CONFIG.aiProxyUrl', 'error');
     return;
   }
 
@@ -1740,13 +1715,9 @@ async function sendAIMessage() {
   showAILoading(true);
   try {
     const system = buildSystemPrompt();
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch(CONFIG.aiProxyUrl, {
       method: 'POST',
-      headers: {
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json'
-      },
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         model: AI_MODEL,
         max_tokens: AI_MAX_TOKENS,
@@ -1766,7 +1737,7 @@ async function sendAIMessage() {
     if (aiMessages.length > 20) aiMessages.splice(0, 2);
   } catch (e) {
     console.error('Claude API error:', e);
-    addAIMessage('Error al contactar con la IA. Verifica tu clave o intenta de nuevo.', 'bot');
+    addAIMessage('Error al contactar con la IA. Intenta de nuevo.', 'bot');
   }
   showAILoading(false);
 }
@@ -2125,10 +2096,6 @@ function addRecent(file) {
   if (saved) document.documentElement.setAttribute('data-theme', saved);
   if (saved === 'light') document.getElementById('themeBtn').innerHTML = '<i class="fas fa-sun"></i>';
   if (localStorage.getItem('nas-kbhint') !== 'hidden') document.getElementById('kbHint').classList.add('visible');
-  if (!localStorage.getItem('nas-claude-key') && CONFIG.claudeKey) {
-    localStorage.setItem('nas-claude-key', CONFIG.claudeKey);
-    document.getElementById('aiKeySetup').style.display = 'none';
-  }
   await loadFolder(CONFIG.rootFolder);
   initAuth();
   document.addEventListener('click', () => {
