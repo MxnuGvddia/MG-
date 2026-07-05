@@ -1,40 +1,46 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NAS Online - Gestor de Archivos</title>
+<title>NAS Online</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0d1117;
-  --bg2: #161b22;
-  --bg3: #21262d;
-  --border: #30363d;
-  --text: #f0f6fc;
-  --text2: #8b949e;
-  --accent: #58a6ff;
-  --accent2: #1f6feb;
-  --hover: #1c2128;
-  --success: #3fb950;
-  --danger: #f85149;
-  --warning: #d29922;
-  --shadow: rgba(0,0,0,.4);
-  --radius: 8px;
+  --bg: #0a0e14;
+  --bg2: #111820;
+  --bg3: #1a2332;
+  --surface: #1e293b;
+  --border: #2a3a4e;
+  --text: #e2e8f0;
+  --text2: #8899aa;
+  --accent: #38bdf8;
+  --accent2: #0284c7;
+  --accent-dim: rgba(56, 189, 248, .12);
+  --success: #4ade80;
+  --danger: #f87171;
+  --warning: #fbbf24;
+  --shadow: rgba(0,0,0,.5);
+  --radius: 10px;
+  --radius-sm: 6px;
   --font: 'Inter', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --glow: 0 0 20px rgba(56,189,248,.08);
 }
 [data-theme="light"] {
-  --bg: #ffffff;
-  --bg2: #f6f8fa;
-  --bg3: #eaeef2;
-  --border: #d0d7de;
-  --text: #1f2328;
-  --text2: #656d76;
-  --accent: #0969da;
-  --accent2: #0550ae;
-  --hover: #e8eaed;
-  --shadow: rgba(0,0,0,.1);
+  --bg: #f8fafc;
+  --bg2: #f1f5f9;
+  --bg3: #e2e8f0;
+  --surface: #ffffff;
+  --border: #cbd5e1;
+  --text: #0f172a;
+  --text2: #64748b;
+  --accent: #0284c7;
+  --accent2: #0369a1;
+  --accent-dim: rgba(2, 132, 199, .08);
+  --shadow: rgba(0,0,0,.08);
+  --glow: none;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -42,15 +48,21 @@ body {
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  overflow-x: hidden;
 }
 a { color: var(--accent); text-decoration: none; }
-.hidden { display: none !important; }
 
-/* Header */
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text2); }
+
+/* ===== HEADER ===== */
 header {
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
-  padding: 12px 24px;
+  padding: 14px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -59,129 +71,142 @@ header {
   position: sticky;
   top: 0;
   z-index: 100;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 header h1 {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 10px;
+  letter-spacing: -.3px;
 }
-header h1 i { color: var(--accent); }
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.theme-btn, .view-btn, .upload-btn {
+header h1 i { color: var(--accent); filter: drop-shadow(0 0 6px rgba(56,189,248,.3)); }
+header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
+.header-actions { display: flex; align-items: center; gap: 6px; }
+.btn {
   background: var(--bg3);
   border: 1px solid var(--border);
   color: var(--text);
   padding: 8px 14px;
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
+  font-family: var(--font);
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: .2s;
+  transition: all .2s;
+  white-space: nowrap;
 }
-.theme-btn:hover, .view-btn:hover, .upload-btn:hover {
-  background: var(--hover);
-  border-color: var(--accent);
-}
-.upload-btn {
+.btn:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
+.btn-primary {
   background: var(--accent2);
   border-color: var(--accent2);
   color: #fff;
+  font-weight: 500;
 }
-.upload-btn:hover { opacity: .85; }
+.btn-primary:hover { opacity: .85; background: var(--accent2); color: #fff; }
+.btn-icon { padding: 8px 10px; }
 
-/* Search */
-.search-bar {
-  padding: 16px 24px;
+/* ===== SEARCH + TOOLBAR ===== */
+.search-row {
+  padding: 16px 28px 0;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
 }
-.search-bar input {
+.search-wrapper {
   flex: 1;
-  padding: 10px 14px;
+  position: relative;
+}
+.search-wrapper i {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text2);
+  font-size: 14px;
+  pointer-events: none;
+}
+.search-wrapper input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   color: var(--text);
   font-size: 14px;
   font-family: var(--font);
   outline: none;
   transition: .2s;
 }
-.search-bar input:focus { border-color: var(--accent); }
-.search-bar input::placeholder { color: var(--text2); }
+.search-wrapper input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.search-wrapper input::placeholder { color: var(--text2); }
 
-/* Breadcrumb */
-.breadcrumb {
-  padding: 8px 24px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: var(--text2);
-  flex-wrap: wrap;
-}
-.breadcrumb span {
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: .2s;
-}
-.breadcrumb span:hover {
-  background: var(--hover);
-  color: var(--accent);
-}
-.breadcrumb .sep { cursor: default; color: var(--text2); opacity: .5; }
-
-/* Toolbar */
 .toolbar {
-  padding: 8px 24px;
+  padding: 12px 28px 4px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
-.toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.filter-group { display: flex; gap: 4px; }
+.toolbar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.toolbar-right { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
+
+.filter-group { display: flex; gap: 3px; background: var(--bg2); padding: 3px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
 .filter-btn {
   background: transparent;
+  border: none;
+  color: var(--text2);
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font);
+  transition: .15s;
+}
+.filter-btn:hover { color: var(--text); }
+.filter-btn.active { background: var(--surface); color: var(--accent); box-shadow: 0 1px 3px var(--shadow); }
+
+.sort-group { display: flex; align-items: center; gap: 4px; }
+.sort-group label { font-size: 12px; color: var(--text2); }
+.sort-select {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: var(--font);
+  cursor: pointer;
+  outline: none;
+}
+.sort-select:focus { border-color: var(--accent); }
+.sort-dir-btn {
+  background: var(--bg2);
   border: 1px solid var(--border);
   color: var(--text2);
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 13px;
-  font-family: var(--font);
-  transition: .2s;
+  font-size: 12px;
+  transition: .15s;
 }
-.filter-btn:hover { color: var(--text); border-color: var(--text2); }
-.filter-btn.active {
-  background: var(--accent2);
-  border-color: var(--accent2);
-  color: #fff;
-}
+.sort-dir-btn:hover { color: var(--text); border-color: var(--accent); }
+
 .selection-bar {
   background: var(--accent2);
   color: #fff;
   padding: 8px 16px;
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   font-size: 13px;
   display: flex;
   align-items: center;
   gap: 12px;
+  animation: fadeIn .2s ease;
 }
 .selection-bar button {
   background: rgba(255,255,255,.15);
@@ -195,14 +220,39 @@ header h1 i { color: var(--accent); }
 }
 .selection-bar button:hover { background: rgba(255,255,255,.25); }
 
-/* Viewport */
+/* ===== BREADCRUMB ===== */
+.breadcrumb-bar {
+  padding: 8px 28px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text2);
+  flex-wrap: wrap;
+  min-height: 36px;
+}
+.breadcrumb-bar .item {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: .15s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.breadcrumb-bar .item:hover { background: var(--hover, var(--bg3)); color: var(--accent); }
+.breadcrumb-bar .item.active { color: var(--text); font-weight: 500; cursor: default; }
+.breadcrumb-bar .sep { color: var(--border); font-size: 12px; user-select: none; }
+
+/* ===== VIEWPORT ===== */
 #viewport {
-  padding: 8px 24px 100px;
+  padding: 4px 28px 100px;
+  transition: .2s;
 }
 #viewport.grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
 }
 #viewport.list {
   display: flex;
@@ -210,31 +260,40 @@ header h1 i { color: var(--accent); }
   gap: 2px;
 }
 
-/* Items */
+/* ===== FILE ITEMS ===== */
 .file-item {
-  background: var(--bg2);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 12px;
   cursor: pointer;
-  transition: .2s;
+  transition: all .2s;
   position: relative;
   user-select: none;
 }
-.file-item:hover { background: var(--hover); border-color: var(--accent); }
-.file-item.selected {
-  background: rgba(88,166,255,.12);
+.file-item:hover {
+  background: var(--bg2);
   border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: var(--glow);
 }
+.file-item:active { transform: translateY(0); }
+.file-item.selected {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.file-item.focused { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 #viewport.grid .file-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   gap: 6px;
-  padding: 16px 12px;
+  padding: 18px 12px 14px;
 }
-#viewport.grid .file-item .icon { font-size: 32px; }
+#viewport.grid .file-item .icon { font-size: 36px; margin-bottom: 2px; }
 #viewport.grid .file-item .name {
   font-size: 13px;
   word-break: break-word;
@@ -242,84 +301,171 @@ header h1 i { color: var(--accent); }
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  line-height: 1.3;
 }
 #viewport.grid .file-item .meta { display: none; }
+#viewport.grid .file-item .badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg3);
+  color: var(--text2);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-family: var(--mono);
+}
+#viewport.grid .file-item .thumb {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--bg3);
+  margin-bottom: 4px;
+}
 
 #viewport.list .file-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 10px 14px;
 }
-#viewport.list .file-item .icon { font-size: 20px; width: 28px; text-align: center; }
-#viewport.list .file-item .name { flex: 1; font-size: 14px; }
+#viewport.list .file-item .icon { font-size: 22px; width: 32px; text-align: center; flex-shrink: 0; }
+#viewport.list .file-item .name { flex: 1; font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#viewport.list .file-item .name mark {
+  background: rgba(251, 191, 36, .25);
+  color: var(--warning);
+  padding: 0 2px;
+  border-radius: 2px;
+}
 #viewport.list .file-item .meta {
   font-size: 12px;
   color: var(--text2);
   display: flex;
-  gap: 16px;
+  gap: 20px;
+  flex-shrink: 0;
 }
-.file-item .thumb {
-  width: 80px;
-  height: 60px;
+#viewport.list .file-item .meta span { white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+#viewport.list .file-item .badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--bg3);
+  color: var(--text2);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-family: var(--mono);
+  flex-shrink: 0;
+}
+#viewport.list .file-item .thumb {
+  width: 48px;
+  height: 36px;
   object-fit: cover;
   border-radius: 4px;
   background: var(--bg3);
+  flex-shrink: 0;
 }
-#viewport.grid .file-item .thumb { width: 100%; height: 100px; object-fit: cover; }
+
 .file-item .check {
   position: absolute;
-  top: 6px; right: 6px;
-  width: 20px; height: 20px;
+  top: 6px; left: 6px;
+  width: 22px; height: 22px;
   border: 2px solid var(--text2);
-  border-radius: 4px;
+  border-radius: 6px;
   display: none;
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  background: var(--bg);
+  background: var(--surface);
+  z-index: 2;
 }
 .file-item.selected .check { display: flex; background: var(--accent); border-color: var(--accent); color: #fff; }
-.file-item.folder .icon { color: var(--warning); }
-.file-item.image .icon { color: #7ee787; }
-.file-item.video .icon { color: #d2a8ff; }
-.file-item.audio .icon { color: #ffa657; }
-.file-item.pdf .icon { color: #f85149; }
-.file-item.code .icon { color: #79c0ff; }
-.file-item.archive .icon { color: #bc8cff; }
 
-/* Empty state */
+/* Type colors */
+.file-item.folder .icon { color: var(--warning); }
+.file-item.image .icon { color: var(--success); }
+.file-item.video .icon { color: #c084fc; }
+.file-item.audio .icon { color: #fb923c; }
+.file-item.pdf .icon { color: var(--danger); }
+.file-item.code .icon { color: var(--accent); }
+.file-item.archive .icon { color: #e879f9; }
+
+/* ===== EMPTY STATES ===== */
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 80px 20px;
   color: var(--text2);
 }
-.empty-state i { font-size: 48px; margin-bottom: 16px; opacity: .5; }
-.empty-state h3 { font-size: 18px; margin-bottom: 8px; }
-.empty-state p { font-size: 14px; }
+.empty-state i { font-size: 56px; margin-bottom: 16px; opacity: .4; }
+.empty-state h3 { font-size: 20px; margin-bottom: 8px; color: var(--text); }
+.empty-state p { font-size: 14px; max-width: 400px; margin: 0 auto; line-height: 1.6; }
 
-/* Preview Modal */
+/* ===== LOADING SKELETON ===== */
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+}
+.skeleton-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.skeleton-item .s-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: var(--bg3);
+}
+.skeleton-item .s-line {
+  width: 80%;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--bg3);
+}
+.skeleton-item .s-line:last-child { width: 50%; }
+.shimmer {
+  background: linear-gradient(90deg, var(--bg3) 25%, var(--surface) 50%, var(--bg3) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ===== PREVIEW MODAL ===== */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.85);
+  background: rgba(0,0,0,.8);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeIn .2s ease;
 }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .modal-content {
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  max-width: 90vw;
-  max-height: 90vh;
+  border-radius: 16px;
+  max-width: 92vw;
+  max-height: 92vh;
   width: 100%;
   overflow: auto;
   position: relative;
+  box-shadow: 0 24px 80px var(--shadow);
+  animation: scaleIn .2s ease;
 }
+@keyframes scaleIn { from { transform: scale(.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .modal-header {
   display: flex;
   align-items: center;
@@ -328,262 +474,247 @@ header h1 i { color: var(--accent); }
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
-  background: var(--bg);
+  background: var(--surface);
   z-index: 10;
 }
-.modal-header h3 { font-size: 16px; font-weight: 600; }
+.modal-header h3 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 .modal-close {
   background: none;
   border: none;
-  color: var(--text);
-  font-size: 20px;
+  color: var(--text2);
+  font-size: 18px;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 6px 10px;
   border-radius: 4px;
+  transition: .15s;
 }
-.modal-close:hover { background: var(--hover); }
+.modal-close:hover { background: var(--bg3); color: var(--text); }
 .modal-body { padding: 20px; }
-.modal-body img { max-width: 100%; max-height: 70vh; display: block; margin: 0 auto; border-radius: 4px; }
-.modal-body video, .modal-body audio { width: 100%; border-radius: 4px; }
-.modal-body iframe { width: 100%; height: 70vh; border: none; border-radius: 4px; }
+.modal-body img { max-width: 100%; max-height: 75vh; display: block; margin: 0 auto; border-radius: 8px; }
+.modal-body video, .modal-body audio { width: 100%; border-radius: 8px; }
+.modal-body iframe { width: 100%; height: 75vh; border: none; border-radius: 8px; }
 .modal-body pre {
   background: var(--bg2);
-  padding: 16px;
-  border-radius: 6px;
+  padding: 20px;
+  border-radius: 8px;
   overflow: auto;
-  max-height: 60vh;
+  max-height: 65vh;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.6;
+  font-family: var(--mono);
 }
 
-/* Context Menu */
+/* ===== CONTEXT MENU ===== */
 .context-menu {
   position: fixed;
-  background: var(--bg2);
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 4px;
-  min-width: 180px;
+  border-radius: 12px;
+  padding: 6px;
+  min-width: 210px;
   z-index: 2000;
-  box-shadow: 0 8px 24px var(--shadow);
+  box-shadow: 0 12px 48px var(--shadow), 0 0 0 1px rgba(255,255,255,.03);
+  animation: menuIn .15s cubic-bezier(.22,1,.36,1);
+  transform-origin: top left;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
-.context-menu div {
-  padding: 8px 12px;
+@keyframes menuIn {
+  from { transform: scale(.92) translateY(-4px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+.context-menu .item {
+  padding: 9px 14px;
   font-size: 13px;
   cursor: pointer;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: .1s;
-}
-.context-menu div:hover { background: var(--accent2); color: #fff; }
-.context-menu div i { width: 16px; text-align: center; }
-
-/* Config screen */
-.config-screen {
-  max-width: 520px;
-  margin: 60px auto;
-  padding: 0 24px;
-  text-align: center;
-}
-.config-screen h2 { margin-bottom: 12px; }
-.config-screen p { color: var(--text2); margin-bottom: 24px; line-height: 1.6; }
-.config-screen .note {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  text-align: left;
-  font-size: 13px;
-}
-.config-screen .note code {
-  background: var(--bg3);
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 12px;
-}
-
-/* Toast */
-.toast-container {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.toast {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  padding: 12px 20px;
-  border-radius: var(--radius);
-  font-size: 14px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 4px 12px var(--shadow);
-  animation: slideIn .3s ease;
-  min-width: 280px;
+  transition: all .1s;
+  position: relative;
 }
-.toast.success { border-left: 4px solid var(--success); }
-.toast.error { border-left: 4px solid var(--danger); }
-.toast.info { border-left: 4px solid var(--accent); }
-@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-/* Loading */
-.loading {
-  text-align: center;
-  padding: 60px;
+.context-menu .item:hover { background: var(--accent-dim); color: var(--accent); }
+.context-menu .item i { width: 18px; text-align: center; font-size: 13px; flex-shrink: 0; }
+.context-menu .item .shortcut {
+  margin-left: auto;
+  font-size: 11px;
   color: var(--text2);
+  font-family: var(--mono);
+  opacity: .6;
 }
-.loading i { font-size: 32px; animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.context-menu .item.danger:hover { background: rgba(248,113,113,.12); color: var(--danger); }
+.context-menu .item.disabled { opacity: .35; cursor: default; pointer-events: none; }
+.context-menu .sep { border-top: 1px solid var(--border); margin: 4px 8px; padding: 0; cursor: default; }
+.context-menu .sep:hover { background: none; }
+.context-menu .label {
+  padding: 4px 14px 2px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--text2);
+  font-weight: 600;
+  opacity: .5;
+}
 
-/* Loading skeleton */
-.skeleton {
-  background: linear-gradient(90deg, var(--bg2) 25%, var(--bg3) 50%, var(--bg2) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 4px;
+/* ===== INFO PANEL (SIDEBAR) ===== */
+.info-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.3);
+  z-index: 500;
+  display: none;
 }
-@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.info-overlay.open { display: block; animation: fadeIn .2s ease; }
+.info-panel {
+  position: fixed;
+  top: 0;
+  right: -400px;
+  width: 380px;
+  max-width: 90vw;
+  height: 100vh;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  z-index: 501;
+  transition: right .3s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 32px var(--shadow);
+}
+.info-panel.open { right: 0; }
+.info-panel-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.info-panel-header h3 { font-size: 16px; font-weight: 600; }
+.info-panel-body { flex: 1; padding: 20px; overflow-y: auto; }
+.info-panel-body .field { margin-bottom: 16px; }
+.info-panel-body .field label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text2);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+.info-panel-body .field .value {
+  font-size: 14px;
+  word-break: break-word;
+}
+.info-panel-body .icon-preview {
+  text-align: center;
+  padding: 24px;
+  margin-bottom: 16px;
+  background: var(--bg2);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+.info-panel-body .icon-preview i { font-size: 56px; }
+.info-panel-body .icon-preview img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+}
 
 /* ===== AI ASSISTANT ===== */
 .ai-fab {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  width: 56px;
-  height: 56px;
+  width: 56px; height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #58a6ff, #1f6feb);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
   border: none;
   color: #fff;
   font-size: 24px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(88,166,255,.4);
+  box-shadow: 0 4px 20px rgba(56,189,248,.35);
   z-index: 900;
-  transition: .3s;
+  transition: all .3s cubic-bezier(.4,0,.2,1);
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.ai-fab:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 28px rgba(88,166,255,.5);
-}
+.ai-fab:hover { transform: scale(1.1) rotate(-5deg); box-shadow: 0 6px 28px rgba(56,189,248,.5); }
 .ai-fab.active { transform: rotate(45deg); }
-
 .ai-panel {
   position: fixed;
   bottom: 92px;
   right: 24px;
   width: 380px;
-  max-height: 520px;
-  background: var(--bg2);
+  max-height: 540px;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
-  box-shadow: 0 8px 32px var(--shadow);
+  box-shadow: 0 12px 48px var(--shadow);
   z-index: 899;
   display: none;
   flex-direction: column;
   overflow: hidden;
-  animation: slideUp .3s ease;
+  animation: slideUp .25s ease;
 }
 .ai-panel.open { display: flex; }
-@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
+@keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .ai-header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(135deg, rgba(88,166,255,.1), transparent);
+  background: linear-gradient(135deg, var(--accent-dim), transparent);
 }
-.ai-header h3 {
-  font-size: 15px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+.ai-header h3 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 .ai-header h3 i { color: var(--accent); }
-.ai-close {
-  background: none;
-  border: none;
-  color: var(--text2);
-  font-size: 18px;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-}
+.ai-close { background: none; border: none; color: var(--text2); font-size: 18px; cursor: pointer; padding: 4px; border-radius: 4px; }
 .ai-close:hover { color: var(--text); }
-
 .ai-body {
   flex: 1;
   padding: 16px 20px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 .ai-body .message {
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 13px;
   line-height: 1.5;
-  max-width: 85%;
+  max-width: 88%;
+  animation: fadeIn .2s ease;
 }
-.ai-body .message.bot {
-  background: var(--bg3);
-  align-self: flex-start;
-  border-bottom-left-radius: 4px;
-}
-.ai-body .message.user {
-  background: var(--accent2);
-  color: #fff;
-  align-self: flex-end;
-  border-bottom-right-radius: 4px;
-}
-.ai-body .quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 4px 0;
-}
+.ai-body .message.bot { background: var(--bg3); align-self: flex-start; border-bottom-left-radius: 4px; }
+.ai-body .message.user { background: var(--accent2); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+.ai-body .quick-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
 .ai-body .quick-actions button {
   background: var(--bg3);
   border: 1px solid var(--border);
   color: var(--text);
-  padding: 6px 12px;
-  border-radius: 16px;
+  padding: 6px 14px;
+  border-radius: 20px;
   cursor: pointer;
   font-size: 12px;
   font-family: var(--font);
   transition: .2s;
 }
-.ai-body .quick-actions button:hover {
-  background: var(--accent2);
-  border-color: var(--accent2);
-  color: #fff;
-}
+.ai-body .quick-actions button:hover { background: var(--accent2); border-color: var(--accent2); color: #fff; }
 .ai-body .context-info {
   background: var(--bg3);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 14px;
+  border-radius: 10px;
+  padding: 12px 16px;
   font-size: 12px;
   color: var(--text2);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 .ai-body .context-info span { display: flex; align-items: center; gap: 6px; }
 .ai-body .context-info i { width: 14px; text-align: center; color: var(--accent); }
-
 .ai-footer {
   padding: 12px 16px;
   border-top: 1px solid var(--border);
@@ -592,7 +723,7 @@ header h1 i { color: var(--accent); }
 }
 .ai-footer input {
   flex: 1;
-  padding: 8px 12px;
+  padding: 8px 14px;
   background: var(--bg3);
   border: 1px solid var(--border);
   border-radius: 20px;
@@ -603,8 +734,7 @@ header h1 i { color: var(--accent); }
 }
 .ai-footer input:focus { border-color: var(--accent); }
 .ai-footer button {
-  width: 36px;
-  height: 36px;
+  width: 36px; height: 36px;
   border-radius: 50%;
   background: var(--accent2);
   border: none;
@@ -614,36 +744,137 @@ header h1 i { color: var(--accent); }
   align-items: center;
   justify-content: center;
   transition: .2s;
+  flex-shrink: 0;
 }
 .ai-footer button:hover { opacity: .85; }
 
-/* Responsive */
-@media (max-width: 640px) {
-  header { padding: 10px 12px; }
-  header h1 { font-size: 16px; }
-  .search-bar, .breadcrumb, .toolbar, #viewport { padding-left: 12px; padding-right: 12px; }
-  #viewport.grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-  .ai-panel { width: calc(100vw - 24px); right: 12px; bottom: 86px; max-height: 60vh; }
+/* ===== TOAST ===== */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 20px var(--shadow);
+  animation: toastIn .3s ease;
+  pointer-events: auto;
+  backdrop-filter: blur(8px);
+}
+.toast.success { border-left: 3px solid var(--success); }
+.toast.error { border-left: 3px solid var(--danger); }
+.toast.info { border-left: 3px solid var(--accent); }
+@keyframes toastIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ===== CONFIG SCREEN ===== */
+.config-screen {
+  max-width: 540px;
+  margin: 80px auto;
+  padding: 0 24px;
+  text-align: center;
+}
+.config-screen h2 { margin-bottom: 12px; font-size: 24px; }
+.config-screen p { color: var(--text2); margin-bottom: 28px; line-height: 1.7; }
+.config-screen .note {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.config-screen .note code {
+  background: var(--bg3);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: var(--mono);
+}
+
+/* ===== KEYBOARD HINT ===== */
+.keyboard-hint {
+  position: fixed;
+  bottom: 92px;
+  left: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--text2);
+  z-index: 50;
+  display: none;
+  box-shadow: 0 4px 16px var(--shadow);
+  line-height: 1.6;
+}
+.keyboard-hint kbd {
+  background: var(--bg3);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 11px;
+  border: 1px solid var(--border);
+}
+.keyboard-hint.visible { display: block; animation: fadeIn .2s ease; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  header { padding: 12px 16px; }
+  header h1 { font-size: 18px; }
+  header h1 span { display: none; }
+  .search-row, .breadcrumb-bar, .toolbar, #viewport { padding-left: 16px; padding-right: 16px; }
+  #viewport.grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar-left { justify-content: center; }
+  .toolbar-right { justify-content: center; }
+  .filter-group { overflow-x: auto; }
+  .ai-panel { width: calc(100vw - 32px); right: 16px; bottom: 84px; max-height: 65vh; }
+  .info-panel { width: 100vw; max-width: 100vw; }
+  .modal-content { max-width: 100vw; max-height: 100vh; border-radius: 0; }
+  .modal-body pre { font-size: 12px; }
+}
+@media (max-width: 480px) {
+  #viewport.grid { grid-template-columns: repeat(2, 1fr); }
+  .header-actions .btn span { display: none; }
 }
 </style>
 </head>
 <body>
 
 <header>
-  <h1><i class="fas fa-server"></i> NAS Online</h1>
+  <h1><i class="fas fa-server"></i> NAS <span>| Gestor de Archivos</span></h1>
   <div class="header-actions">
-    <button class="view-btn" onclick="toggleView()" title="Cambiar vista"><i class="fas fa-grip"></i></button>
-    <button class="upload-btn" onclick="openUpload()"><i class="fas fa-upload"></i> Subir</button>
-    <button class="theme-btn" onclick="toggleTheme()" title="Cambiar tema"><i class="fas fa-moon"></i></button>
+    <button class="btn btn-icon" onclick="toggleView()" title="Cambiar vista" id="viewBtn"><i class="fas fa-list"></i></button>
+    <button class="btn btn-icon" onclick="toggleInfoPanel(null)" title="Info carpeta" id="infoToggleBtn"><i class="fas fa-info-circle"></i></button>
+    <button class="btn btn-primary" onclick="openUpload()"><i class="fas fa-upload"></i> <span>Subir</span></button>
+    <button class="btn btn-icon" onclick="toggleTheme()" title="Tema" id="themeBtn"><i class="fas fa-moon"></i></button>
   </div>
 </header>
 
-<div class="search-bar">
-  <input type="text" id="searchInput" placeholder="Buscar archivos..." oninput="handleSearch(this.value)">
-  <button class="theme-btn" onclick="document.getElementById('searchInput').value='';handleSearch('')"><i class="fas fa-times"></i></button>
+<div class="search-row">
+  <div class="search-wrapper">
+    <i class="fas fa-search"></i>
+    <input type="text" id="searchInput" placeholder="Buscar archivos..." oninput="handleSearch(this.value)">
+  </div>
+  <button class="btn btn-icon" onclick="document.getElementById('searchInput').value='';handleSearch('')" title="Limpiar"><i class="fas fa-times"></i></button>
 </div>
 
-<div class="breadcrumb" id="breadcrumb"></div>
+<div class="breadcrumb-bar" id="breadcrumb"></div>
 
 <div class="toolbar">
   <div class="toolbar-left">
@@ -657,32 +888,70 @@ header h1 i { color: var(--accent); }
       <button class="filter-btn" data-filter="code" onclick="setFilter('code')"><i class="fas fa-code"></i></button>
       <button class="filter-btn" data-filter="archive" onclick="setFilter('archive')"><i class="fas fa-file-archive"></i></button>
     </div>
+    <div class="sort-group">
+      <label>Orden:</label>
+      <select class="sort-select" id="sortSelect" onchange="applySort()">
+        <option value="name">Nombre</option>
+        <option value="modifiedTime">Fecha</option>
+        <option value="size">Tamaño</option>
+        <option value="type">Tipo</option>
+      </select>
+      <button class="sort-dir-btn" id="sortDirBtn" onclick="toggleSortDir()" title="Dirección"><i class="fas fa-arrow-up-wide-short"></i></button>
+    </div>
+  </div>
+  <div class="toolbar-right" id="statsBar">
+    <span id="statsCount"><i class="fas fa-circle-notch"></i> Cargando...</span>
   </div>
   <div id="selectionBar" class="selection-bar hidden">
     <span id="selCount">0 seleccionados</span>
     <button onclick="clearSelection()"><i class="fas fa-times"></i> Quitar</button>
+    <button onclick="downloadSelected()"><i class="fas fa-download"></i> Descargar</button>
   </div>
 </div>
 
 <div id="viewport"></div>
 
+<!-- Info Panel -->
+<div class="info-overlay" id="infoOverlay" onclick="toggleInfoPanel(null)"></div>
+<div class="info-panel" id="infoPanel">
+  <div class="info-panel-header">
+    <h3><i class="fas fa-info-circle" style="color:var(--accent)"></i> Detalles</h3>
+    <button class="modal-close" onclick="toggleInfoPanel(null)"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="info-panel-body" id="infoPanelBody">
+    <div class="icon-preview" id="infoIconPreview"><i class="fas fa-folder-open" style="color:var(--warning)"></i></div>
+    <div class="field"><label>Nombre</label><div class="value" id="infoName">—</div></div>
+    <div class="field"><label>Tipo</label><div class="value" id="infoType">—</div></div>
+    <div class="field"><label>Tamaño</label><div class="value" id="infoSize">—</div></div>
+    <div class="field"><label>Modificado</label><div class="value" id="infoModified">—</div></div>
+    <div class="field"><label>Creado</label><div class="value" id="infoCreated">—</div></div>
+    <div class="field"><label>ID</label><div class="value" id="infoId" style="font-family:var(--mono);font-size:12px;color:var(--text2)">—</div></div>
+    <div class="field"><label>MIME</label><div class="value" id="infoMime" style="font-family:var(--mono);font-size:12px;color:var(--text2);word-break:break-all">—</div></div>
+  </div>
+</div>
+
 <div id="toastContainer" class="toast-container"></div>
+
+<!-- Keyboard hints -->
+<div class="keyboard-hint" id="kbHint">
+  <kbd>↑</kbd> <kbd>↓</kbd> Navegar &nbsp;·&nbsp; <kbd>Enter</kbd> Abrir &nbsp;·&nbsp; <kbd>Ctrl</kbd>+clic Multi<br>
+  <kbd>Ctrl+A</kbd> Todo &nbsp;·&nbsp; <kbd>F1</kbd> Ocultar
+</div>
 
 <!-- AI Assistant -->
 <button class="ai-fab" id="aiFab" onclick="toggleAI()"><i class="fas fa-robot"></i></button>
-
 <div class="ai-panel" id="aiPanel">
   <div class="ai-header">
     <h3><i class="fas fa-sparkles"></i> Asistente IA</h3>
     <button class="ai-close" onclick="toggleAI()"><i class="fas fa-times"></i></button>
   </div>
   <div class="ai-body" id="aiBody">
-    <div class="message bot">Hola, soy tu asistente. Puedo ayudarte a navegar tus archivos, buscar cosas o darte información sobre el NAS.</div>
+    <div class="message bot">¡Hola! Soy tu asistente del NAS. Pregúntame lo que necesites sobre tus archivos.</div>
     <div class="quick-actions">
-      <button onclick="aiAction('files')"><i class="fas fa-folder-open"></i> Total archivos</button>
+      <button onclick="aiAction('files')"><i class="fas fa-folder-open"></i> Total</button>
       <button onclick="aiAction('help')"><i class="fas fa-question-circle"></i> Ayuda</button>
       <button onclick="aiAction('search')"><i class="fas fa-search"></i> Buscar</button>
-      <button onclick="aiAction('about')"><i class="fas fa-info-circle"></i> Acerca de</button>
+      <button onclick="aiAction('keys')"><i class="fas fa-keyboard"></i> Atajos</button>
     </div>
   </div>
   <div class="ai-footer">
@@ -704,46 +973,102 @@ let currentFiles = [];
 let currentFilter = 'all';
 let viewMode = 'grid';
 let selectedFiles = new Set();
-let clipboard = null;
+let sortField = 'name';
+let sortAsc = true;
+let searchTerm = '';
+let focusIndex = -1;
+let lastClickedId = null;
 
-// Files
-async function loadFolder(folderId) {
+// ===== LOADING =====
+function showSkeleton() {
   const vp = document.getElementById('viewport');
-  vp.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p style="margin-top:12px">Cargando...</p></div>';
+  let html = '<div class="skeleton-grid">';
+  for (let i = 0; i < 12; i++) {
+    html += `<div class="skeleton-item"><div class="s-box shimmer"></div><div class="s-line shimmer"></div><div class="s-line shimmer"></div></div>`;
+  }
+  html += '</div>';
+  vp.innerHTML = html;
+}
+
+async function loadFolder(folderId) {
+  showSkeleton();
   currentFolder = folderId;
   try {
     const q = `'${folderId}' in parents and trashed=false`;
-    const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,size,modifiedTime,thumbnailLink,iconLink,webViewLink,fileExtension)&pageSize=1000&orderBy=folder,name_natural&key=${CONFIG.apiKey}`;
+    const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,size,modifiedTime,createdTime,thumbnailLink,iconLink,webViewLink,fileExtension)&pageSize=1000&orderBy=folder,name_natural&key=${CONFIG.apiKey}`;
     const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`API Error ${resp.status}: ${resp.statusText}`);
+    if (!resp.ok) throw new Error(`API Error ${resp.status}`);
     const data = await resp.json();
     allFiles = data.files || [];
+    focusIndex = -1;
     applyFilters();
     updateBreadcrumb(folderId);
+    updateStats();
   } catch(e) {
-    vp.innerHTML = `
+    document.getElementById('viewport').innerHTML = `
       <div class="empty-state">
-        <i class="fas fa-exclamation-triangle"></i>
+        <i class="fas fa-exclamation-triangle" style="color:var(--danger)"></i>
         <h3>Error al cargar</h3>
-        <p>${e.message || 'No se pudieron cargar los archivos. Verifica la API key y los permisos de la carpeta.'}</p>
+        <p>${e.message}. Verifica la API key y los permisos de la carpeta.</p>
       </div>`;
     showToast('Error: ' + e.message, 'error');
   }
 }
 
+// ===== FILTER + SEARCH + SORT =====
 function applyFilters() {
   let filtered = [...allFiles];
-  if (currentFilter !== 'all') {
+  if (currentFilter !== 'all')
     filtered = filtered.filter(f => getFileType(f) === currentFilter);
-  }
-  const searchVal = document.getElementById('searchInput').value.toLowerCase();
-  if (searchVal) {
-    filtered = filtered.filter(f => f.name.toLowerCase().includes(searchVal));
-  }
+  searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  if (searchTerm)
+    filtered = filtered.filter(f => f.name.toLowerCase().includes(searchTerm));
   currentFiles = filtered;
-  renderFiles(filtered);
+  applySort();
 }
 
+function applySort() {
+  sortField = document.getElementById('sortSelect').value;
+  let sorted = [...currentFiles];
+  sorted.sort((a, b) => {
+    let va, vb;
+    if (sortField === 'name') { va = a.name.toLowerCase(); vb = b.name.toLowerCase(); }
+    else if (sortField === 'size') { va = parseInt(a.size) || 0; vb = parseInt(b.size) || 0; }
+    else if (sortField === 'type') { va = getFileType(a); vb = getFileType(b); }
+    else { va = a.modifiedTime || ''; vb = b.modifiedTime || ''; }
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
+  currentFiles = sorted;
+  renderFiles(sorted);
+}
+
+function toggleSortDir() {
+  sortAsc = !sortAsc;
+  document.getElementById('sortDirBtn').innerHTML = sortAsc ? '<i class="fas fa-arrow-up-wide-short"></i>' : '<i class="fas fa-arrow-down-short-wide"></i>';
+  applySort();
+}
+
+function setFilter(filter) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
+  applyFilters();
+}
+
+let searchTimeout;
+function handleSearch(val) {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => applyFilters(), 250);
+}
+
+function highlightText(text, term) {
+  if (!term) return text;
+  const re = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return text.replace(re, '<mark>$1</mark>');
+}
+
+// ===== RENDER =====
 function getFileType(file) {
   const mime = file.mimeType;
   if (mime === 'application/vnd.google-apps.folder') return 'folder';
@@ -751,68 +1076,110 @@ function getFileType(file) {
   if (mime.startsWith('video/')) return 'video';
   if (mime.startsWith('audio/')) return 'audio';
   if (mime === 'application/pdf' || mime.includes('document') || mime.includes('spreadsheet') || mime.includes('presentation')) return 'pdf';
-  if (['text/', 'application/json', 'application/javascript', 'text/html', 'text/css', 'text/x-python', 'text/x-java', 'text/x-c', 'text/x-rust', 'text/markdown', 'application/xml', 'text/xml'].some(t => mime.startsWith(t) || mime === t) || /\.(js|ts|py|java|c|cpp|h|rs|go|rb|php|sh|bash|yaml|yml|toml|json|xml|html|css|scss|less|md|sql|r|lua|swift|kt)$/i.test(file.name)) return 'code';
+  if (['text/', 'application/json', 'application/javascript', 'text/html', 'text/css', 'text/x-python', 'text/x-java', 'text/x-c', 'text/x-rust', 'text/markdown', 'application/xml'].some(t => mime.startsWith(t) || mime === t) || /\.(js|ts|py|java|c|cpp|h|rs|go|rb|php|sh|bash|yaml|yml|toml|json|xml|html|css|scss|less|md|sql|r|lua|swift|kt|dart)$/i.test(file.name)) return 'code';
   if (mime.includes('zip') || mime.includes('rar') || mime.includes('tar') || mime.includes('gzip') || mime.includes('compress') || /\.(zip|rar|tar|gz|7z|bz2)$/i.test(file.name)) return 'archive';
   return 'other';
 }
 
 function getFileIcon(file) {
-  const type = getFileType(file);
-  const icons = { folder: 'fa-folder', image: 'fa-file-image', video: 'fa-file-video', audio: 'fa-file-audio', pdf: 'fa-file-pdf', code: 'fa-file-code', archive: 'fa-file-archive', other: 'fa-file' };
-  return icons[type] || 'fa-file';
+  const map = { folder: 'fa-folder', image: 'fa-file-image', video: 'fa-file-video', audio: 'fa-file-audio', pdf: 'fa-file-pdf', code: 'fa-file-code', archive: 'fa-file-archive', other: 'fa-file' };
+  return map[getFileType(file)] || 'fa-file';
+}
+
+function getExtension(file) {
+  return (file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : '');
 }
 
 function formatSize(bytes) {
   if (!bytes) return '';
-  const u = ['B','KB','MB','GB'];
+  const u = ['B','KB','MB','GB','TB'];
   let i = 0; let s = parseInt(bytes);
-  while (s >= 1024 && i < 3) { s /= 1024; i++; }
-  return s.toFixed(i>0?1:0) + ' ' + u[i];
+  while (s >= 1024 && i < u.length - 1) { s /= 1024; i++; }
+  return (i > 0 ? s.toFixed(1) : s.toFixed(0)) + ' ' + u[i];
 }
 
 function formatDate(d) {
   if (!d) return '';
-  const date = new Date(d);
-  return date.toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + date.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+  return new Date(d).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 function renderFiles(files) {
   const vp = document.getElementById('viewport');
   if (!files.length) {
-    vp.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><h3>Carpeta vacía</h3><p>No hay archivos aquí</p></div>';
+    const isSearch = searchTerm.length > 0;
+    vp.innerHTML = isSearch
+      ? `<div class="empty-state"><i class="fas fa-search-minus"></i><h3>Sin resultados</h3><p>No se encontraron archivos que coincidan con "${searchTerm}"</p></div>`
+      : `<div class="empty-state"><i class="fas fa-folder-open"></i><h3>Carpeta vacía</h3><p>No hay archivos aquí. Usa el botón "Subir" para agregar contenido.</p></div>`;
     return;
   }
-  vp.innerHTML = files.map(f => {
+  vp.innerHTML = files.map((f, idx) => {
     const type = getFileType(f);
     const icon = getFileIcon(f);
+    const ext = getExtension(f);
     const thumb = f.thumbnailLink || (type === 'image' ? `https://lh3.googleusercontent.com/d/${f.id}=w400` : '');
     const sel = selectedFiles.has(f.id) ? 'selected' : '';
-    return `<div class="file-item ${type} ${sel}" data-id="${f.id}" onclick="handleClick(this,'${f.id}')" oncontextmenu="showContextMenu(event,'${f.id}')">
+    const nameHtml = viewMode === 'list' ? highlightText(f.name, searchTerm) : f.name;
+    return `<div class="file-item ${type} ${sel}" data-id="${f.id}" data-index="${idx}" tabindex="0"
+      onclick="handleClick(event,'${f.id}',${idx})"
+      ondblclick="handleDblClick('${f.id}')"
+      oncontextmenu="showContextMenu(event,'${f.id}')">
       <div class="check"><i class="fas fa-check"></i></div>
-      ${thumb ? `<img class="thumb" src="${thumb}" loading="lazy">` : `<div class="icon"><i class="fas ${icon}"></i></div>`}
-      <div class="name">${f.name}</div>
+      ${ext && type !== 'folder' && viewMode === 'grid' ? `<span class="badge">${ext}</span>` : ''}
+      ${thumb ? `<img class="thumb" src="${thumb}" loading="lazy" alt="">` : `<div class="icon"><i class="fas ${icon}"></i></div>`}
+      <div class="name">${nameHtml}</div>
       <div class="meta">
         <span>${formatSize(f.size)}</span>
         <span>${formatDate(f.modifiedTime)}</span>
       </div>
+      ${viewMode === 'list' && ext && type !== 'folder' ? `<span class="badge">${ext}</span>` : ''}
     </div>`;
   }).join('');
 }
 
-// Selection
-function handleClick(el, id) {
+// ===== SELECTION =====
+function handleClick(e, id, idx) {
   if (window.getSelection().toString()) return;
-  const fromKey = window.event && (window.event.ctrlKey || window.event.metaKey);
-  if (fromKey) {
-    if (selectedFiles.has(id)) { selectedFiles.delete(id); el.classList.remove('selected'); }
-    else { selectedFiles.add(id); el.classList.add('selected'); }
+  const ctrl = e.ctrlKey || e.metaKey;
+  const shift = e.shiftKey;
+
+  if (shift && lastClickedId) {
+    const items = currentFiles;
+    const lastIdx = items.findIndex(f => f.id === lastClickedId);
+    if (lastIdx > -1) {
+      const from = Math.min(lastIdx, idx);
+      const to = Math.max(lastIdx, idx);
+      clearSelection();
+      for (let i = from; i <= to; i++) {
+        selectedFiles.add(items[i].id);
+      }
+      renderFiles(currentFiles);
+      updateSelectionBar();
+    }
+    return;
+  }
+
+  if (ctrl) {
+    if (selectedFiles.has(id)) { selectedFiles.delete(id); }
+    else { selectedFiles.add(id); }
+    const el = document.querySelector(`.file-item[data-id="${id}"]`);
+    if (el) el.classList.toggle('selected');
     updateSelectionBar();
     return;
   }
+
+  if (selectedFiles.size > 0) {
+    clearSelection();
+  }
+  lastClickedId = id;
+  focusIndex = idx;
+}
+
+function handleDblClick(id) {
   const file = allFiles.find(f => f.id === id);
   if (!file) return;
+  clearSelection();
   if (getFileType(file) === 'folder') {
-    if (folderStack[folderStack.length-1] !== currentFolder) folderStack.push(currentFolder);
+    if (folderStack[folderStack.length - 1] !== currentFolder) folderStack.push(currentFolder);
     loadFolder(id);
   } else {
     previewFile(file);
@@ -836,40 +1203,34 @@ function clearSelection() {
   updateSelectionBar();
 }
 
-// Search
-let searchTimeout;
-function handleSearch(val) {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => applyFilters(), 300);
+function downloadSelected() {
+  if (selectedFiles.size === 0) return;
+  showToast('Abriendo archivos seleccionados...', 'info');
+  selectedFiles.forEach(id => {
+    window.open(`https://www.googleapis.com/drive/v3/files/${id}?alt=media&key=${CONFIG.apiKey}`, '_blank');
+  });
 }
 
-// Filter
-function setFilter(filter) {
-  currentFilter = filter;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
-  applyFilters();
-}
-
-// View
+// ===== VIEW =====
 function toggleView() {
   viewMode = viewMode === 'grid' ? 'list' : 'grid';
-  document.querySelector('.view-btn i').className = viewMode === 'grid' ? 'fas fa-grip' : 'fas fa-list';
   document.getElementById('viewport').className = viewMode;
+  document.getElementById('viewBtn').innerHTML = viewMode === 'grid' ? '<i class="fas fa-list"></i>' : '<i class="fas fa-grip"></i>';
   renderFiles(currentFiles);
 }
 
-// Theme
+// ===== THEME =====
 function toggleTheme() {
   const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
   document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
-  document.querySelector('.theme-btn i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+  document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
   localStorage.setItem('nas-theme', isDark ? 'light' : 'dark');
 }
 
-// Breadcrumb
+// ===== BREADCRUMB =====
 async function updateBreadcrumb(folderId) {
   const bc = document.getElementById('breadcrumb');
-  const parts = [{ id: CONFIG.rootFolder, name: 'NAS' }];
+  const parts = [{ id: CONFIG.rootFolder, name: 'NAS', icon: 'fa-server' }];
   try {
     if (folderId !== CONFIG.rootFolder) {
       let current = folderId;
@@ -886,62 +1247,73 @@ async function updateBreadcrumb(folderId) {
   } catch(_) {}
   bc.innerHTML = parts.map((p, i) => {
     const isLast = i === parts.length - 1;
-    const sep = i > 0 ? '<span class="sep">/</span>' : '';
-    return sep + (isLast ? `<span style="color:var(--text);font-weight:500">${p.name}</span>` : `<span onclick="navigateTo('${p.id}')">${p.name}</span>`);
+    const sep = i > 0 ? '<span class="sep">›</span>' : '';
+    return sep + (isLast
+      ? `<span class="item active"><i class="fas fa-folder-open" style="color:var(--warning)"></i> ${p.name}</span>`
+      : `<span class="item" onclick="navigateTo('${p.id}')">${i === 0 ? `<i class="fas ${p.icon || 'fa-folder'}"></i>` : ''} ${p.name}</span>`);
   }).join('');
 }
 
 function navigateTo(id) {
+  if (id === currentFolder) return;
   folderStack = [];
   loadFolder(id);
 }
 
-// Upload
+// ===== UPLOAD =====
 function openUpload() {
-  const url = `https://drive.google.com/drive/folders/${currentFolder}`;
-  window.open(url, '_blank');
+  window.open(`https://drive.google.com/drive/folders/${currentFolder}`, '_blank');
   showToast('Abriendo Google Drive para subir archivos', 'info');
 }
 
-// Preview
+// ===== STATS =====
+function updateStats() {
+  const folders = allFiles.filter(f => getFileType(f) === 'folder').length;
+  const total = allFiles.length;
+  const totalSize = allFiles.reduce((s, f) => s + (parseInt(f.size) || 0), 0);
+  const shown = currentFiles.length;
+  const st = document.getElementById('statsCount');
+  if (shown !== total) st.innerHTML = `<i class="fas fa-filter"></i> ${shown} de ${total} elementos`;
+  else st.innerHTML = `<i class="fas fa-file"></i> ${total} elementos · ${formatSize(totalSize)}`;
+}
+
+// ===== PREVIEW =====
 async function previewFile(file) {
   const type = getFileType(file);
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
-  const close = () => overlay.remove();
   document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', esc); } });
 
   let body = '';
   if (type === 'image') {
     body = `<img src="https://lh3.googleusercontent.com/d/${file.id}=w1600" alt="${file.name}">`;
   } else if (type === 'video') {
-    const src = `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${CONFIG.apiKey}`;
-    body = `<video controls autoplay><source src="${src}"><p>Tu navegador no soporta video.</p></video>`;
+    body = `<video controls autoplay><source src="https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${CONFIG.apiKey}"></video>`;
   } else if (type === 'audio') {
-    const src = `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${CONFIG.apiKey}`;
-    body = `<audio controls autoplay><source src="${src}"><p>Tu navegador no soporta audio.</p></audio>`;
+    body = `<audio controls autoplay><source src="https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${CONFIG.apiKey}"></audio>`;
   } else if (type === 'pdf' || file.mimeType.includes('document') || file.mimeType.includes('spreadsheet') || file.mimeType.includes('presentation')) {
-    body = `<iframe src="https://drive.google.com/file/d/${file.id}/preview"></iframe>`;
+    body = `<iframe src="https://drive.google.com/file/d/${file.id}/preview" allowfullscreen></iframe>`;
   } else if (type === 'code') {
     try {
       const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${CONFIG.apiKey}`);
       const text = await resp.text();
-      body = `<pre><code>${escapeHtml(text)}</code></pre>`;
-    } catch { body = '<p style="color:var(--danger)">Error al cargar el contenido del archivo.</p>'; }
+      body = `<pre>${escapeHtml(text)}</pre>`;
+    } catch { body = '<p style="color:var(--danger);padding:20px">Error al cargar el contenido.</p>'; }
   } else {
-    body = `<p style="color:var(--text2);text-align:center;padding:40px">
-      Vista previa no disponible para este tipo de archivo.<br>
-      <a href="${file.webViewLink || `https://drive.google.com/file/d/${file.id}/view`}" target="_blank" style="margin-top:12px;display:inline-block">
-        <i class="fas fa-external-link-alt"></i> Abrir en Google Drive
+    body = `<div style="text-align:center;padding:60px 20px;color:var(--text2)">
+      <i class="fas fa-file" style="font-size:48px;margin-bottom:16px;opacity:.4;display:block"></i>
+      <p>Vista previa no disponible</p>
+      <a href="${file.webViewLink || `https://drive.google.com/file/d/${file.id}/view`}" target="_blank" class="btn" style="display:inline-flex;margin-top:16px">
+        <i class="fas fa-external-link-alt"></i> Abrir en Drive
       </a>
-    </p>`;
+    </div>`;
   }
 
   overlay.innerHTML = `<div class="modal-content">
     <div class="modal-header">
-      <h3><i class="fas ${getFileIcon(file)}" style="margin-right:8px"></i>${file.name}</h3>
-      <div style="display:flex;gap:8px">
+      <h3><i class="fas ${getFileIcon(file)}" style="color:var(--accent)"></i> ${file.name}</h3>
+      <div style="display:flex;gap:6px">
         <button class="modal-close" onclick="downloadFile('${file.id}')" title="Descargar"><i class="fas fa-download"></i></button>
         <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="fas fa-times"></i></button>
       </div>
@@ -951,32 +1323,133 @@ async function previewFile(file) {
   document.body.appendChild(overlay);
 }
 
-// Context menu
+// ===== INFO PANEL =====
+function toggleInfoPanel(file) {
+  const panel = document.getElementById('infoPanel');
+  const overlay = document.getElementById('infoOverlay');
+  if (!file) {
+    panel.classList.toggle('open');
+    overlay.classList.toggle('open');
+    if (!panel.classList.contains('open')) return;
+    file = { name: 'Carpeta actual', mimeType: 'application/vnd.google-apps.folder', size: null, modifiedTime: null, createdTime: null, id: currentFolder };
+    document.getElementById('infoName').textContent = file.name + ' (' + currentFiles.length + ' elementos)';
+    document.getElementById('infoType').textContent = 'Carpeta NAS';
+    document.getElementById('infoSize').textContent = formatSize(allFiles.reduce((s, f) => s + (parseInt(f.size) || 0), 0)) + ' total';
+    document.getElementById('infoModified').textContent = '—';
+    document.getElementById('infoCreated').textContent = '—';
+    document.getElementById('infoId').textContent = currentFolder;
+    document.getElementById('infoMime').textContent = '—';
+    document.getElementById('infoIconPreview').innerHTML = '<i class="fas fa-folder-open" style="color:var(--warning);font-size:56px"></i>';
+    return;
+  }
+  panel.classList.add('open');
+  overlay.classList.add('open');
+  const type = getFileType(file);
+  const iconMap = { folder: ['fa-folder', 'var(--warning)'], image: ['fa-file-image', 'var(--success)'], video: ['fa-file-video', '#c084fc'], audio: ['fa-file-audio', '#fb923c'], pdf: ['fa-file-pdf', 'var(--danger)'], code: ['fa-file-code', 'var(--accent)'], archive: ['fa-file-archive', '#e879f9'], other: ['fa-file', 'var(--text2)'] };
+  const [ic, col] = iconMap[type] || ['fa-file', 'var(--text2)'];
+  document.getElementById('infoIconPreview').innerHTML = `<i class="fas ${ic}" style="color:${col};font-size:56px"></i>`;
+  document.getElementById('infoName').textContent = file.name;
+  document.getElementById('infoType').textContent = type.charAt(0).toUpperCase() + type.slice(1) + (file.mimeType.includes('folder') ? '' : ' · ' + file.mimeType.split('/').pop());
+  document.getElementById('infoSize').textContent = formatSize(file.size) || '—';
+  document.getElementById('infoModified').textContent = formatDate(file.modifiedTime) || '—';
+  document.getElementById('infoCreated').textContent = formatDate(file.createdTime) || '—';
+  document.getElementById('infoId').textContent = file.id;
+  document.getElementById('infoMime').textContent = file.mimeType;
+}
+
+// ===== CONTEXT MENU =====
+let _ctxListener = null;
+
+function buildMenu(items, x, y) {
+  closeContextMenu();
+  const menu = document.createElement('div');
+  menu.className = 'context-menu';
+  const pw = window.innerWidth, ph = window.innerHeight;
+  const mw = 220, mh = items.length * 36 + 24;
+  const lx = Math.max(4, Math.min(x, pw - mw));
+  const ly = Math.max(4, Math.min(y, ph - mh));
+  menu.style.left = lx + 'px';
+  menu.style.top = ly + 'px';
+  menu.style.transformOrigin = (lx < x ? 'top left' : 'top right');
+  menu.innerHTML = items.map(it => {
+    if (it === null) return '<div class="sep"></div>';
+    const cls = 'item' + (it.danger ? ' danger' : '') + (it.disabled ? ' disabled' : '');
+    const sc = it.shortcut ? `<span class="shortcut">${it.shortcut}</span>` : '';
+    return `<div class="${cls}" data-action="${it.action || ''}"><i class="fas ${it.icon}"></i> ${it.text}${sc}</div>`;
+  }).join('');
+  document.body.appendChild(menu);
+  menu.querySelectorAll('.item').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const action = el.dataset.action;
+      closeContextMenu();
+      if (action) new Function(action)();
+    });
+  });
+  _ctxListener = e => {
+    if (!e.target.closest('.context-menu')) closeContextMenu();
+  };
+  setTimeout(() => document.addEventListener('click', _ctxListener), 0);
+}
+
 function showContextMenu(e, id) {
   e.preventDefault();
   const file = allFiles.find(f => f.id === id);
   if (!file) return;
-  closeContextMenu();
-  const menu = document.createElement('div');
-  menu.className = 'context-menu';
-  menu.style.left = e.clientX + 'px';
-  menu.style.top = e.clientY + 'px';
   const type = getFileType(file);
+  const isFolder = type === 'folder';
   const items = [
-    { icon: 'fa-download', text: 'Descargar', action: () => downloadFile(id) },
-    type !== 'folder' ? { icon: 'fa-eye', text: 'Vista previa', action: () => previewFile(file) } : null,
-    { icon: 'fa-link', text: 'Copiar enlace', action: () => copyLink(id) },
-    { icon: 'fa-external-link-alt', text: 'Abrir en Drive', action: () => window.open(file.webViewLink || `https://drive.google.com/file/d/${id}/view`, '_blank') },
-    type === 'folder' ? null : { icon: 'fa-i-cursor', text: 'Renombrar', action: () => showToast('Renombrar requiere OAuth', 'info') },
-    { icon: 'fa-trash', text: 'Eliminar', action: () => showToast('Eliminar requiere OAuth', 'info') },
-  ].filter(Boolean);
-  menu.innerHTML = items.map(it => `<div onclick="closeContextMenu();${it.action.toString()}"><i class="fas ${it.icon}"></i> ${it.text}</div>`).join('');
-  document.body.appendChild(menu);
-  setTimeout(() => document.addEventListener('click', closeContextMenu, { once: true }), 0);
+    { icon: 'fa-download', text: 'Descargar', action: `downloadFile('${id}')`, shortcut: 'Enter' },
+    ...(isFolder ? [] : [{ icon: 'fa-eye', text: 'Vista previa', action: `previewFile(allFiles.find(f=>f.id==='${id}'))`, shortcut: '' }]),
+    { icon: 'fa-link', text: 'Copiar enlace', action: `copyLink('${id}')`, shortcut: 'Ctrl+C' },
+    null,
+    { icon: 'fa-info-circle', text: 'Ver información', action: `toggleInfoPanel(allFiles.find(f=>f.id==='${id}'))`, shortcut: 'Ctrl+I' },
+    { icon: 'fa-external-link-alt', text: 'Abrir en Drive', action: `window.open('${file.webViewLink || 'https://drive.google.com/file/d/'+id+'/view'}','_blank')` },
+    null,
+    { icon: 'fa-check-double', text: 'Seleccionar todo', action: `selectAllFiles()`, shortcut: 'Ctrl+A' },
+    { icon: 'fa-i-cursor', text: 'Renombrar', action: `showToast('Requiere OAuth','info')` },
+    { icon: 'fa-trash', text: 'Eliminar', action: `showToast('Requiere OAuth','info')`, danger: true },
+  ];
+  buildMenu(items, e.clientX, e.clientY);
+}
+
+function showViewportMenu(e) {
+  e.preventDefault();
+  const multi = selectedFiles.size > 0;
+  const items = [
+    { icon: 'fa-sync-alt', text: 'Refrescar', action: `loadFolder(currentFolder)`, shortcut: 'F5' },
+    { icon: 'fa-check-double', text: 'Seleccionar todo', action: `selectAllFiles()`, shortcut: 'Ctrl+A' },
+    ...(multi ? [{ icon: 'fa-times', text: 'Deseleccionar todo', action: `clearSelection()`, shortcut: 'Esc' }] : []),
+    null,
+    { icon: 'fa-upload', text: 'Subir archivo', action: `showToast('Requiere OAuth (abrir Drive)','info')` },
+    { icon: 'fa-folder-plus', text: 'Nueva carpeta', action: `showToast('Requiere OAuth','info')` },
+    ...(multi ? [
+      null,
+      { icon: 'fa-download', text: `Descargar (${selectedFiles.size})`, action: `showToast('Aún no implementado','info')` },
+    ] : []),
+  ];
+  buildMenu(items, e.clientX, e.clientY);
 }
 
 function closeContextMenu() {
   document.querySelectorAll('.context-menu').forEach(el => el.remove());
+  if (_ctxListener) { document.removeEventListener('click', _ctxListener); _ctxListener = null; }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeContextMenu();
+});
+
+function selectAllFiles() {
+  selectedFiles.clear();
+  currentFiles.forEach(f => selectedFiles.add(f.id));
+  applySelection();
+  showToast(`${selectedFiles.size} archivo(s) seleccionado(s)`);
+}
+
+function clearSelection() {
+  selectedFiles.clear();
+  applySelection();
 }
 
 function downloadFile(id) {
@@ -986,11 +1459,52 @@ function downloadFile(id) {
 async function copyLink(id) {
   try {
     await navigator.clipboard.writeText(`https://drive.google.com/file/d/${id}/view`);
-    showToast('Enlace copiado al portapapeles', 'success');
+    showToast('Enlace copiado', 'success');
   } catch { showToast('No se pudo copiar', 'error'); }
 }
 
-// AI Assistant
+// ===== KEYBOARD =====
+document.addEventListener('keydown', e => {
+  if (e.key.startsWith('F') || e.ctrlKey || e.metaKey) {
+    if (e.ctrlKey && (e.key === 'a' || e.key === 'A')) {
+      e.preventDefault();
+      if (currentFiles.length) {
+        currentFiles.forEach(f => selectedFiles.add(f.id));
+        renderFiles(currentFiles);
+        updateSelectionBar();
+        showToast(selectedFiles.size + ' seleccionados', 'info');
+      }
+      return;
+    }
+    if (e.key === 'F1') {
+      e.preventDefault();
+      document.getElementById('kbHint').classList.toggle('visible');
+      return;
+    }
+    return;
+  }
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (!currentFiles.length) return;
+    if (focusIndex < 0) focusIndex = 0;
+    else focusIndex = e.key === 'ArrowDown' ? Math.min(focusIndex + 1, currentFiles.length - 1) : Math.max(focusIndex - 1, 0);
+    const id = currentFiles[focusIndex].id;
+    document.querySelectorAll('.file-item.focused').forEach(el => el.classList.remove('focused'));
+    const el = document.querySelector(`.file-item[data-id="${id}"]`);
+    if (el) { el.classList.add('focused'); el.scrollIntoView({ block: 'nearest' }); }
+    lastClickedId = id;
+  }
+  if (e.key === 'Enter' && lastClickedId) {
+    e.preventDefault();
+    const file = allFiles.find(f => f.id === lastClickedId);
+    if (file) handleDblClick(lastClickedId);
+  }
+  if (e.key === 'Delete' && selectedFiles.size > 0) {
+    showToast(selectedFiles.size + ' archivo(s) no se pueden eliminar sin OAuth', 'info');
+  }
+});
+
+// ===== AI ASSISTANT =====
 function toggleAI() {
   const panel = document.getElementById('aiPanel');
   const fab = document.getElementById('aiFab');
@@ -1016,10 +1530,9 @@ function updateAIContext() {
   const videos = allFiles.filter(f => getFileType(f) === 'video').length;
   const totalSize = allFiles.reduce((s, f) => s + (parseInt(f.size) || 0), 0);
   ctx.innerHTML = `
-    <span><i class="fas fa-folder"></i> ${folders} carpetas</span>
-    <span><i class="fas fa-file"></i> ${totalFiles - folders} archivos</span>
+    <span><i class="fas fa-folder"></i> ${folders} carpetas · ${totalFiles - folders} archivos</span>
     <span><i class="fas fa-image"></i> ${images} imágenes · <i class="fas fa-video"></i> ${videos} videos</span>
-    <span><i class="fas fa-database"></i> ${formatSize(totalSize)} total</span>
+    <span><i class="fas fa-database"></i> ${formatSize(totalSize)} total · ${totalFiles} elementos</span>
   `;
 }
 
@@ -1032,20 +1545,20 @@ function aiAction(action) {
     body.insertBefore(d, body.querySelector('.quick-actions'));
     body.scrollTop = body.scrollHeight;
   };
+  const folders = allFiles.filter(f => getFileType(f) === 'folder').length;
   switch(action) {
     case 'files':
-      const folders = allFiles.filter(f => getFileType(f) === 'folder').length;
-      addMsg(`Hay ${allFiles.length} elementos en total: ${folders} carpetas y ${allFiles.length - folders} archivos.`, 'bot');
+      addMsg(`Hay ${allFiles.length} elementos: ${folders} carpetas y ${allFiles.length - folders} archivos. ${formatSize(allFiles.reduce((s, f) => s + (parseInt(f.size) || 0), 0))} en total.`, 'bot');
       break;
     case 'help':
-      addMsg('Puedes navegar las carpetas haciendo clic, buscar archivos con la barra de búsqueda, filtrar por tipo con los botones, y hacer clic derecho en cualquier archivo para ver opciones adicionales.', 'bot');
+      addMsg('Usa la barra de búsqueda, filtra por tipo, ordena por nombre/fecha/tamaño, haz clic derecho en archivos, usa <kbd>Ctrl</kbd>+clic para multi-selección, y <kbd>↑</kbd><kbd>↓</kbd> para navegar con teclado.', 'bot');
       break;
     case 'search':
       document.getElementById('searchInput').focus();
-      addMsg('Escribe en la barra de búsqueda para encontrar archivos por nombre.', 'bot');
+      addMsg('Escribe en la barra de búsqueda para filtrar archivos al instante.', 'bot');
       break;
-    case 'about':
-      addMsg('NAS Online v1.0 — Gestor de archivos con Google Drive. Creado por Mxnu.', 'bot');
+    case 'keys':
+      addMsg('Atajos: ↑↓ navegar · Enter abrir · Ctrl+A seleccionar todo · Ctrl+clic multi-selección · Shift+clic rango · F1 teclado · Escape cerrar modal', 'bot');
       break;
   }
 }
@@ -1066,33 +1579,35 @@ async function sendAIMessage() {
   addMsg(text, 'user');
   const lower = text.toLowerCase();
   let response = '';
-  if (lower.includes('archivo') || lower.includes('cuánto') || lower.includes('cuantos') || lower.includes('total') || lower.includes('elemento') || lower.includes('carpeta')) {
+  if (/(archivo|cuánto|cuantos|total|elemento|carpeta)/i.test(lower) && !lower.includes('buscar')) {
     const folders = allFiles.filter(f => getFileType(f) === 'folder').length;
-    response = `Hay ${allFiles.length} elementos en total: ${folders} carpetas y ${allFiles.length - folders} archivos.`;
-  } else if (lower.includes('buscar') || lower.includes('encuentra')) {
-    const term = text.replace(/buscar|encuentra|encuentrame|localiza|dónde está|donde esta/gi, '').trim();
+    response = `Hay ${allFiles.length} elementos: ${folders} carpetas y ${allFiles.length - folders} archivos.`;
+  } else if (/(buscar|encuentra|localiza|dónde está|donde esta)/i.test(lower)) {
+    const term = lower.replace(/buscar|encuentra|localiza|dónde está|donde esta|encuentrame|encuentráme/gi, '').trim();
     if (term) {
-      const matches = allFiles.filter(f => f.name.toLowerCase().includes(term.toLowerCase()));
-      if (matches.length) response = `Encontré ${matches.length} archivo(s) que coinciden con "${term}":\n${matches.slice(0, 10).map(f => '• ' + f.name).join('\n')}${matches.length > 10 ? `\n...y ${matches.length - 10} más` : ''}`;
-      else response = `No encontré archivos que coincidan con "${term}".`;
-    } else response = '¿Qué archivo te gustaría buscar? Escribe "buscar nombre_del_archivo"';
-  } else if (lower.includes('ayuda') || lower.includes('help')) {
-    response = 'Puedes hacer clic en las carpetas para navegar, usar la barra de búsqueda, filtrar por tipo, o hacer clic derecho en un archivo para descargarlo/copiar enlace.';
-  } else if (lower.includes('hola') || lower.includes('buenas') || lower.includes('qué tal') || lower.includes('que tal') || lower.includes('gracias')) {
-    response = '¡Hola! Estoy aquí para ayudarte con tu NAS. Pregúntame lo que necesites.';
+      const matches = allFiles.filter(f => f.name.toLowerCase().includes(term));
+      if (matches.length) response = `Encontré ${matches.length} archivo(s):\n${matches.slice(0, 12).map(f => '• ' + f.name).join('\n')}${matches.length > 12 ? `\n...y ${matches.length - 12} más` : ''}`;
+      else response = `No encontré nada para "${term}".`;
+    } else response = '¿Qué archivo buscas? Ej: "buscar informe"';
+  } else if (/(ayuda|help|qué puedes|que puedes|función|funciones)/i.test(lower)) {
+    response = 'Puedo contar archivos, buscar por nombre, darte información del NAS. También hay botones de acción rápida arriba.';
+  } else if (/(hola|buenas|qué tal|que tal|gracias|hey)/i.test(lower)) {
+    response = '¡Hola! Estoy aquí para ayudarte con tu NAS.';
+  } else if (/(ordenar|sort|tamaño|fecha|nombre)/i.test(lower)) {
+    response = 'Usa el menú "Orden:" arriba para ordenar por nombre, fecha, tamaño o tipo.';
   } else {
-    response = 'Puedo ayudarte a contar archivos, buscar por nombre o darte información general. ¿Qué necesitas?';
+    response = 'No entendí. Puedo: contar archivos, buscar por nombre, o darte ayuda.';
   }
-  setTimeout(() => addMsg(response, 'bot'), 300);
+  setTimeout(() => addMsg(response, 'bot'), 200);
 }
 
+// ===== UTILITIES =====
 function escapeHtml(t) {
   const d = document.createElement('div');
   d.textContent = t;
   return d.innerHTML;
 }
 
-// Toast
 function showToast(msg, type = 'info') {
   const c = document.getElementById('toastContainer');
   const t = document.createElement('div');
@@ -1100,31 +1615,54 @@ function showToast(msg, type = 'info') {
   const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
   t.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i> ${msg}`;
   c.appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; t.style.transition = '.3s'; setTimeout(() => t.remove(), 300); }, 3500);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = '.3s'; setTimeout(() => t.remove(), 300); }, 3200);
 }
 
-// Init
+// ===== RECENT FILES (localStorage) =====
+function addRecent(file) {
+  try {
+    let recent = JSON.parse(localStorage.getItem('nas-recent') || '[]');
+    recent = recent.filter(r => r.id !== file.id);
+    recent.unshift({ id: file.id, name: file.name, time: Date.now() });
+    if (recent.length > 20) recent = recent.slice(0, 20);
+    localStorage.setItem('nas-recent', JSON.stringify(recent));
+  } catch(_) {}
+}
+
+// ===== INIT =====
 (async function init() {
   if (!CONFIG.apiKey || CONFIG.apiKey.includes('TU_API')) {
     document.getElementById('viewport').innerHTML = `
       <div class="config-screen">
         <h2><i class="fas fa-key" style="color:var(--accent)"></i> Configuración requerida</h2>
-        <p>Para usar NAS Online necesitas configurar una API key de Google Drive.</p>
+        <p>Para usar NAS Online necesitas una API key de Google Drive.</p>
         <div class="note">
           <strong>Pasos:</strong><br><br>
           1. Ve a <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a><br>
-          2. Crea o selecciona un proyecto<br>
+          2. Crea un proyecto o selecciona uno existente<br>
           3. Activa la <strong>Google Drive API</strong><br>
-          4. Crea una <strong>API Key</strong><br>
-          5. Abre el código y reemplaza <code>TU_API_KEY</code> en <code>CONFIG.apiKey</code><br><br>
-          <strong>Importante:</strong> La carpeta raíz debe tener permisos de "Cualquier persona con el enlace".
+          4. Crea una <strong>API Key</strong> (sin restricciones)<br>
+          5. Reemplaza <code>TU_API_KEY</code> en el código<br><br>
+          <strong>Importante:</strong> La carpeta debe tener permisos públicos.
         </div>
       </div>`;
     return;
   }
   const saved = localStorage.getItem('nas-theme');
   if (saved) document.documentElement.setAttribute('data-theme', saved);
+  if (saved === 'light') document.getElementById('themeBtn').innerHTML = '<i class="fas fa-sun"></i>';
+  if (localStorage.getItem('nas-kbhint') !== 'hidden') document.getElementById('kbHint').classList.add('visible');
   await loadFolder(CONFIG.rootFolder);
+  document.addEventListener('click', () => {
+    const hint = document.getElementById('kbHint');
+    if (hint.classList.contains('visible')) {
+      hint.classList.remove('visible');
+      localStorage.setItem('nas-kbhint', 'hidden');
+    }
+  }, { once: true });
+  document.getElementById('viewport').addEventListener('contextmenu', e => {
+    if (!e.target.closest('.file-item')) showViewportMenu(e);
+  });
 })();
 </script>
 </body>
