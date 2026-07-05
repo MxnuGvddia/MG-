@@ -1839,7 +1839,8 @@ async function initAuth() {
 
 function handleAuth() {
   if (!tokenClient) { showToast('Cargando autenticación...', 'info'); return; }
-  tokenClient.requestAccessToken({ prompt: '' });
+  if (isAuthenticated()) { showToast('Ya has iniciado sesión', 'info'); return; }
+  tokenClient.requestAccessToken();
 }
 
 function handleSignout() {
@@ -1906,6 +1907,7 @@ function closeRenameModal() {
 }
 
 async function confirmRename() {
+  if (!ensureAuth()) return;
   const newName = document.getElementById('renameInput').value.trim();
   if (!newName || !_renameFileId) return;
   const id = _renameFileId;
@@ -1976,6 +1978,7 @@ function closeNewFolderModal() {
 }
 
 async function confirmNewFolder() {
+  if (!ensureAuth()) return;
   const name = document.getElementById('newFolderInput').value.trim();
   if (!name) return;
   closeNewFolderModal();
@@ -1999,10 +2002,7 @@ async function confirmNewFolder() {
 
 // ===== UPLOAD =====
 function openUpload() {
-  if (!isAuthenticated()) {
-    if (confirm('Necesitas iniciar sesión para subir archivos. ¿Iniciar sesión ahora?')) handleAuth();
-    return;
-  }
+  if (!ensureAuth()) return;
   document.getElementById('fileInput').click();
 }
 
@@ -2095,19 +2095,24 @@ function addRecent(file) {
 
 // ===== INIT =====
 (async function init() {
-  if (!CONFIG.apiKey || CONFIG.apiKey.includes('TU_API')) {
+  if (!CONFIG.apiKey || CONFIG.apiKey.includes('TU_API') || !CONFIG.clientId || CONFIG.clientId.includes('TU_CLIENT')) {
     document.getElementById('viewport').innerHTML = `
       <div class="config-screen">
         <h2><i class="fas fa-key" style="color:var(--accent)"></i> Configuración requerida</h2>
-        <p>Para usar NAS Online necesitas una API key de Google Drive.</p>
+        <p>Para usar NAS Online necesitas credenciales de Google Cloud.</p>
         <div class="note">
           <strong>Pasos:</strong><br><br>
           1. Ve a <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a><br>
           2. Crea un proyecto o selecciona uno existente<br>
           3. Activa la <strong>Google Drive API</strong><br>
           4. Crea una <strong>API Key</strong> (sin restricciones)<br>
-          5. Reemplaza <code>TU_API_KEY</code> en el código<br><br>
-          <strong>Importante:</strong> La carpeta debe tener permisos públicos.
+          5. Ve a <strong>Pantalla de consentimiento OAuth</strong> — selecciona "Externo"<br>
+          6. Añade el scope <code>../auth/drive</code> (acceso completo)<br>
+          7. Añade tu email como <strong>usuario de prueba</strong><br>
+          8. Crea un <strong>Cliente OAuth</strong> (tipo "Aplicación web")<br>
+          9. Añade tu dominio como <strong>origen JavaScript autorizado</strong><br>
+          10. Reemplaza <code>TU_API_KEY</code> y <code>TU_CLIENT_ID</code> en el código<br><br>
+          <strong>Importante:</strong> La carpeta debe ser accesible con el permiso que configures.
         </div>
       </div>`;
     return;
