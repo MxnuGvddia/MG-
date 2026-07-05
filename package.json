@@ -1,0 +1,14 @@
+{
+  "name": "nas-online",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NAS Online — gestor de archivos en la nube con asistente IA",
+  "scripts": {
+    "deploy:worker": "wrangler deploy",
+    "dev:worker": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
