@@ -6,6 +6,7 @@
 <title>NAS Online</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root {
   --bg: #0a0e14;
@@ -109,6 +110,26 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
 }
 .btn-primary:hover { opacity: .85; background: var(--accent2); color: #fff; }
 .btn-icon { padding: 8px 10px; }
+.btn-accent {
+  background: linear-gradient(135deg, #059669, #10b981);
+  border-color: #059669;
+  color: #fff;
+  font-weight: 500;
+}
+.btn-accent:hover { opacity: .85; color: #fff; }
+.user-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--surface); border: 2px solid #10b981;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 20px; color: #10b981;
+  transition: all .2s;
+}
+.user-avatar:hover { border-color: var(--accent); color: var(--accent); }
+.hidden { display: none !important; }
+.upload-progress { width: 100%; height: 6px; background: var(--bg2); border-radius: 4px; overflow: hidden; margin: 16px 0 12px; }
+.upload-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent2), var(--accent)); border-radius: 4px; transition: width .3s; }
+.upload-status p { margin: 4px 0; }
+.upload-status .hint { font-size: 12px; color: var(--text2); }
 
 /* ===== SEARCH + TOOLBAR ===== */
 .search-row {
@@ -702,6 +723,13 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
   transition: .2s;
 }
 .ai-body .quick-actions button:hover { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+
+.ai-loading { display: none; justify-content: center; gap: 4px; padding: 8px; }
+.ai-loading.show { display: flex; }
+.ai-loading span { width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); animation: aiBounce 1.2s infinite; }
+.ai-loading span:nth-child(2) { animation-delay: .2s; }
+.ai-loading span:nth-child(3) { animation-delay: .4s; }
+@keyframes aiBounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-8px); } }
 .ai-body .context-info {
   background: var(--bg3);
   border: 1px solid var(--border);
@@ -861,8 +889,14 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
   <div class="header-actions">
     <button class="btn btn-icon" onclick="toggleView()" title="Cambiar vista" id="viewBtn"><i class="fas fa-list"></i></button>
     <button class="btn btn-icon" onclick="toggleInfoPanel(null)" title="Info carpeta" id="infoToggleBtn"><i class="fas fa-info-circle"></i></button>
-    <button class="btn btn-primary" onclick="openUpload()"><i class="fas fa-upload"></i> <span>Subir</span></button>
+    <button class="btn btn-primary" onclick="openUpload()" id="uploadBtn"><i class="fas fa-upload"></i> <span>Subir</span></button>
     <button class="btn btn-icon" onclick="toggleTheme()" title="Tema" id="themeBtn"><i class="fas fa-moon"></i></button>
+    <div id="authArea">
+      <button class="btn btn-accent" onclick="handleAuth()" id="loginBtn"><i class="fas fa-sign-in-alt"></i> <span>Iniciar sesión</span></button>
+      <div class="user-avatar hidden" id="userAvatar" onclick="handleSignout()" title="Cerrar sesión">
+        <i class="fas fa-user-circle"></i>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -930,6 +964,61 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
   </div>
 </div>
 
+<input type="file" id="fileInput" style="display:none" multiple onchange="handleFileSelect(event)">
+
+<!-- Upload progress modal -->
+<div class="modal-overlay hidden" id="uploadModal" onclick="if(event.target===this)closeUploadModal()">
+  <div class="modal-content" style="max-width:480px">
+    <div class="modal-header">
+      <h3><i class="fas fa-cloud-upload-alt" style="color:var(--accent)"></i> Subiendo archivos</h3>
+      <button class="modal-close" onclick="closeUploadModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="uploadModalBody">
+      <div class="upload-status" id="uploadStatus">
+        <div class="upload-progress"><div class="upload-progress-bar" id="uploadProgressBar"></div></div>
+        <p id="uploadFileName">Preparando...</p>
+        <p id="uploadFileInfo" class="hint"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rename modal -->
+<div class="modal-overlay hidden" id="renameModal" onclick="if(event.target===this)closeRenameModal()">
+  <div class="modal-content" style="max-width:400px">
+    <div class="modal-header">
+      <h3><i class="fas fa-i-cursor" style="color:var(--accent)"></i> Renombrar</h3>
+      <button class="modal-close" onclick="closeRenameModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <label>Nuevo nombre</label>
+      <input type="text" id="renameInput" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:14px;margin-top:6px">
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+        <button class="btn" onclick="closeRenameModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="confirmRename()">Renombrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New folder modal -->
+<div class="modal-overlay hidden" id="newFolderModal" onclick="if(event.target===this)closeNewFolderModal()">
+  <div class="modal-content" style="max-width:400px">
+    <div class="modal-header">
+      <h3><i class="fas fa-folder-plus" style="color:var(--success)"></i> Nueva carpeta</h3>
+      <button class="modal-close" onclick="closeNewFolderModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <label>Nombre de la carpeta</label>
+      <input type="text" id="newFolderInput" placeholder="Mi carpeta" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:14px;margin-top:6px">
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+        <button class="btn" onclick="closeNewFolderModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="confirmNewFolder()">Crear</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toastContainer" class="toast-container"></div>
 
 <!-- Keyboard hints -->
@@ -946,7 +1035,18 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
     <button class="ai-close" onclick="toggleAI()"><i class="fas fa-times"></i></button>
   </div>
   <div class="ai-body" id="aiBody">
-    <div class="message bot">¡Hola! Soy tu asistente del NAS. Pregúntame lo que necesites sobre tus archivos.</div>
+    <div class="ai-key-setup" id="aiKeySetup">
+      <div class="message bot">Para usar el asistente con IA, pega tu clave de Anthropic:</div>
+      <div style="display:flex;gap:6px;padding:4px 12px 12px">
+        <input type="password" id="aiKeyInput" placeholder="sk-ant-..." style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+        <button onclick="saveAIKey()" style="padding:6px 12px;border:none;border-radius:6px;background:var(--accent2);color:#fff;cursor:pointer">Guardar</button>
+      </div>
+      <div style="padding:0 12px 8px;font-size:11px;color:var(--text2)">
+        <i class="fas fa-info-circle"></i> La clave se guarda localmente en tu navegador.
+      </div>
+    </div>
+    <div class="message bot" id="aiWelcome">¡Hola! Pregúntame sobre tus archivos.</div>
+    <div class="ai-loading" id="aiLoading"><span></span><span></span><span></span></div>
     <div class="quick-actions">
       <button onclick="aiAction('files')"><i class="fas fa-folder-open"></i> Total</button>
       <button onclick="aiAction('help')"><i class="fas fa-question-circle"></i> Ayuda</button>
@@ -963,8 +1063,13 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
 <script>
 const CONFIG = {
   apiKey: 'AIzaSyAGloLcDRyDW62OW8INdwr-7rVfMJYUeg8',
+  clientId: '952781470893-m8ndr82u3k8msvjcgl9cc9vqnce1lao6.apps.googleusercontent.com',
   rootFolder: '1AbXlMyDuzhOJZM7-uhlIy1as3J7OLI_A',
 };
+
+let accessToken = null;
+let tokenClient = null;
+let _renameFileId = null;
 
 let currentFolder = CONFIG.rootFolder;
 let folderStack = [];
@@ -1289,14 +1394,18 @@ async function previewFile(file) {
   if (type === 'image') {
     body = `<img src="https://lh3.googleusercontent.com/d/${file.id}=w1600" alt="${file.name}">`;
   } else if (type === 'video') {
-    body = `<video controls autoplay><source src="https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${CONFIG.apiKey}"></video>`;
+    body = `<video controls autoplay><source src="https://www.googleapis.com/drive/v3/files/${file.id}?alt=media${accessToken ? '' : '&key=' + CONFIG.apiKey}"></video>`;
   } else if (type === 'audio') {
-    body = `<audio controls autoplay><source src="https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${CONFIG.apiKey}"></audio>`;
+    body = `<audio controls autoplay><source src="https://www.googleapis.com/drive/v3/files/${file.id}?alt=media${accessToken ? '' : '&key=' + CONFIG.apiKey}"></audio>`;
   } else if (type === 'pdf' || file.mimeType.includes('document') || file.mimeType.includes('spreadsheet') || file.mimeType.includes('presentation')) {
     body = `<iframe src="https://drive.google.com/file/d/${file.id}/preview" allowfullscreen></iframe>`;
   } else if (type === 'code') {
     try {
-      const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${CONFIG.apiKey}`);
+      let url = `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`;
+      const opts = {};
+      if (accessToken) opts.headers = { Authorization: 'Bearer ' + accessToken };
+      else url += '&key=' + CONFIG.apiKey;
+      const resp = await fetch(url, opts);
       const text = await resp.text();
       body = `<pre>${escapeHtml(text)}</pre>`;
     } catch { body = '<p style="color:var(--danger);padding:20px">Error al cargar el contenido.</p>'; }
@@ -1407,8 +1516,8 @@ function showContextMenu(e, id) {
     { icon: 'fa-external-link-alt', text: 'Abrir en Drive', action: `window.open('${file.webViewLink || 'https://drive.google.com/file/d/'+id+'/view'}','_blank')` },
     null,
     { icon: 'fa-check-double', text: 'Seleccionar todo', action: `selectAllFiles()`, shortcut: 'Ctrl+A' },
-    { icon: 'fa-i-cursor', text: 'Renombrar', action: `showToast('Requiere OAuth','info')` },
-    { icon: 'fa-trash', text: 'Eliminar', action: `showToast('Requiere OAuth','info')`, danger: true },
+    { icon: 'fa-i-cursor', text: 'Renombrar', action: `openRename('${id}')` },
+    { icon: 'fa-trash', text: 'Eliminar', action: `deleteFile('${id}')`, danger: true },
   ];
   buildMenu(items, e.clientX, e.clientY);
 }
@@ -1421,11 +1530,11 @@ function showViewportMenu(e) {
     { icon: 'fa-check-double', text: 'Seleccionar todo', action: `selectAllFiles()`, shortcut: 'Ctrl+A' },
     ...(multi ? [{ icon: 'fa-times', text: 'Deseleccionar todo', action: `clearSelection()`, shortcut: 'Esc' }] : []),
     null,
-    { icon: 'fa-upload', text: 'Subir archivo', action: `showToast('Requiere OAuth (abrir Drive)','info')` },
-    { icon: 'fa-folder-plus', text: 'Nueva carpeta', action: `showToast('Requiere OAuth','info')` },
+    { icon: 'fa-upload', text: 'Subir archivo', action: `openUpload()` },
+    { icon: 'fa-folder-plus', text: 'Nueva carpeta', action: `openNewFolder()` },
     ...(multi ? [
       null,
-      { icon: 'fa-download', text: `Descargar (${selectedFiles.size})`, action: `showToast('Aún no implementado','info')` },
+      { icon: 'fa-download', text: `Descargar (${selectedFiles.size})`, action: `downloadSelected()` },
     ] : []),
   ];
   buildMenu(items, e.clientX, e.clientY);
@@ -1453,7 +1562,16 @@ function clearSelection() {
 }
 
 function downloadFile(id) {
-  window.open(`https://www.googleapis.com/drive/v3/files/${id}?alt=media&key=${CONFIG.apiKey}`, '_blank');
+  const url = `https://www.googleapis.com/drive/v3/files/${id}?alt=media${accessToken ? '' : '&key=' + CONFIG.apiKey}`;
+  if (accessToken) {
+    const a = document.createElement('a');
+    a.href = url;
+    const file = allFiles.find(f => f.id === id);
+    a.download = file ? file.name : id;
+    a.click();
+  } else {
+    window.open(url, '_blank');
+  }
 }
 
 async function copyLink(id) {
@@ -1499,12 +1617,30 @@ document.addEventListener('keydown', e => {
     const file = allFiles.find(f => f.id === lastClickedId);
     if (file) handleDblClick(lastClickedId);
   }
-  if (e.key === 'Delete' && selectedFiles.size > 0) {
-    showToast(selectedFiles.size + ' archivo(s) no se pueden eliminar sin OAuth', 'info');
+  if (e.key === 'Delete' && lastClickedId && selectedFiles.size > 0) {
+    e.preventDefault();
+    deleteSelected();
+  }
+  if (e.key === 'Delete' && lastClickedId && selectedFiles.size === 0) {
+    e.preventDefault();
+    deleteFile(lastClickedId);
   }
 });
 
-// ===== AI ASSISTANT =====
+// ===== AI ASSISTANT (Claude API) =====
+const AI_MODEL = 'claude-sonnet-4-20250514';
+let aiMessages = [];
+
+function getAIKey() { return localStorage.getItem('nas-claude-key'); }
+function saveAIKey() {
+  const input = document.getElementById('aiKeyInput');
+  const key = input.value.trim();
+  if (!key || !key.startsWith('sk-ant-')) { showToast('Clave inválida (debe empezar con sk-ant-)', 'error'); return; }
+  localStorage.setItem('nas-claude-key', key);
+  document.getElementById('aiKeySetup').style.display = 'none';
+  showToast('Clave guardada', 'success');
+}
+
 function toggleAI() {
   const panel = document.getElementById('aiPanel');
   const fab = document.getElementById('aiFab');
@@ -1518,11 +1654,13 @@ function toggleAI() {
 
 function updateAIContext() {
   const body = document.getElementById('aiBody');
+  const setup = document.getElementById('aiKeySetup');
+  setup.style.display = getAIKey() ? 'none' : 'block';
   let ctx = body.querySelector('.context-info');
   if (!ctx) {
     ctx = document.createElement('div');
     ctx.className = 'context-info';
-    body.insertBefore(ctx, body.querySelector('.quick-actions'));
+    body.insertBefore(ctx, body.querySelector('.ai-loading'));
   }
   const totalFiles = allFiles.length;
   const folders = allFiles.filter(f => getFileType(f) === 'folder').length;
@@ -1536,69 +1674,108 @@ function updateAIContext() {
   `;
 }
 
-function aiAction(action) {
-  const body = document.getElementById('aiBody');
-  const addMsg = (text, cls) => {
-    const d = document.createElement('div');
-    d.className = 'message ' + cls;
-    d.textContent = text;
-    body.insertBefore(d, body.querySelector('.quick-actions'));
-    body.scrollTop = body.scrollHeight;
-  };
+function buildSystemPrompt() {
   const folders = allFiles.filter(f => getFileType(f) === 'folder').length;
-  switch(action) {
-    case 'files':
-      addMsg(`Hay ${allFiles.length} elementos: ${folders} carpetas y ${allFiles.length - folders} archivos. ${formatSize(allFiles.reduce((s, f) => s + (parseInt(f.size) || 0), 0))} en total.`, 'bot');
-      break;
-    case 'help':
-      addMsg('Usa la barra de búsqueda, filtra por tipo, ordena por nombre/fecha/tamaño, haz clic derecho en archivos, usa <kbd>Ctrl</kbd>+clic para multi-selección, y <kbd>↑</kbd><kbd>↓</kbd> para navegar con teclado.', 'bot');
-      break;
-    case 'search':
-      document.getElementById('searchInput').focus();
-      addMsg('Escribe en la barra de búsqueda para filtrar archivos al instante.', 'bot');
-      break;
-    case 'keys':
-      addMsg('Atajos: ↑↓ navegar · Enter abrir · Ctrl+A seleccionar todo · Ctrl+clic multi-selección · Shift+clic rango · F1 teclado · Escape cerrar modal', 'bot');
-      break;
-  }
+  const total = allFiles.length;
+  const files = allFiles.slice(0, 100);
+  let fileList = files.map(f => `${f.name} (${f.mimeType || 'desconocido'}, ${formatSize(parseInt(f.size) || 0)})`).join('\n');
+  if (allFiles.length > 100) fileList += `\n... y ${allFiles.length - 100} más`;
+  return `Eres un asistente de IA integrado en un NAS (gestor de archivos en Google Drive).
+
+CONTEXTO ACTUAL DE LA CARPETA:
+- Elementos totales: ${total} (${folders} carpetas, ${total - folders} archivos)
+- Carpeta actual ID: ${currentFolder}
+
+LISTA DE ARCHIVOS (hay ${total} en total, mostrando hasta 100):
+${fileList}
+
+INSTRUCCIONES:
+- Responde SIEMPRE en español, de forma amable y concisa (máximo 3 párrafos).
+- Usa la información real de los archivos listados arriba para responder.
+- Si te preguntan por archivos que no están en la lista, dilo honestamente.
+- Puedes ayudar con: conteo de archivos, búsqueda por nombre, información sobre tipos/formatos, organización, sugerencias.
+- NO inventes respuestas sobre archivos que no ves en la lista.
+- Si te piden acciones (renombrar, eliminar, etc.), indícale al usuario que las haga desde el menú contextual.`;
+}
+
+function addAIMessage(text, role) {
+  const body = document.getElementById('aiBody');
+  const d = document.createElement('div');
+  d.className = 'message ' + (role === 'user' ? 'user' : 'bot');
+  d.textContent = text;
+  body.insertBefore(d, body.querySelector('.ai-loading'));
+  body.scrollTop = body.scrollHeight;
+}
+
+function showAILoading(show) {
+  const el = document.getElementById('aiLoading');
+  el.classList.toggle('show', show);
 }
 
 async function sendAIMessage() {
   const input = document.getElementById('aiInput');
   const text = input.value.trim();
   if (!text) return;
-  input.value = '';
-  const body = document.getElementById('aiBody');
-  const addMsg = (content, cls) => {
-    const d = document.createElement('div');
-    d.className = 'message ' + cls;
-    d.textContent = content;
-    body.insertBefore(d, body.querySelector('.quick-actions'));
-    body.scrollTop = body.scrollHeight;
-  };
-  addMsg(text, 'user');
-  const lower = text.toLowerCase();
-  let response = '';
-  if (/(archivo|cuánto|cuantos|total|elemento|carpeta)/i.test(lower) && !lower.includes('buscar')) {
-    const folders = allFiles.filter(f => getFileType(f) === 'folder').length;
-    response = `Hay ${allFiles.length} elementos: ${folders} carpetas y ${allFiles.length - folders} archivos.`;
-  } else if (/(buscar|encuentra|localiza|dónde está|donde esta)/i.test(lower)) {
-    const term = lower.replace(/buscar|encuentra|localiza|dónde está|donde esta|encuentrame|encuentráme/gi, '').trim();
-    if (term) {
-      const matches = allFiles.filter(f => f.name.toLowerCase().includes(term));
-      if (matches.length) response = `Encontré ${matches.length} archivo(s):\n${matches.slice(0, 12).map(f => '• ' + f.name).join('\n')}${matches.length > 12 ? `\n...y ${matches.length - 12} más` : ''}`;
-      else response = `No encontré nada para "${term}".`;
-    } else response = '¿Qué archivo buscas? Ej: "buscar informe"';
-  } else if (/(ayuda|help|qué puedes|que puedes|función|funciones)/i.test(lower)) {
-    response = 'Puedo contar archivos, buscar por nombre, darte información del NAS. También hay botones de acción rápida arriba.';
-  } else if (/(hola|buenas|qué tal|que tal|gracias|hey)/i.test(lower)) {
-    response = '¡Hola! Estoy aquí para ayudarte con tu NAS.';
-  } else if (/(ordenar|sort|tamaño|fecha|nombre)/i.test(lower)) {
-    response = 'Usa el menú "Orden:" arriba para ordenar por nombre, fecha, tamaño o tipo.';
-  } else {
-    response = 'No entendí. Puedo: contar archivos, buscar por nombre, o darte ayuda.';
+
+  const key = getAIKey();
+  if (!key) {
+    showToast('Primero pega tu clave de Anthropic en el asistente', 'info');
+    document.getElementById('aiKeyInput').focus();
+    return;
   }
-  setTimeout(() => addMsg(response, 'bot'), 200);
+
+  input.value = '';
+  addAIMessage(text, 'user');
+  aiMessages.push({ role: 'user', content: text });
+
+  const lower = text.toLowerCase();
+  if (lower === 'hola' || lower === 'buenas' || lower === 'hey') {
+    addAIMessage('¡Hola! ¿En qué puedo ayudarte con tus archivos?', 'bot');
+    return;
+  }
+
+  showAILoading(true);
+  try {
+    const system = buildSystemPrompt();
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: AI_MODEL,
+        max_tokens: 512,
+        system: system,
+        messages: aiMessages
+      })
+    });
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error(`API error ${resp.status}: ${err}`);
+    }
+    const data = await resp.json();
+    const reply = data.content[0].text;
+    addAIMessage(reply, 'bot');
+    aiMessages.push({ role: 'assistant', content: reply });
+    if (aiMessages.length > 20) aiMessages.splice(0, 2);
+  } catch (e) {
+    console.error('Claude API error:', e);
+    addAIMessage('Error al contactar con la IA. Verifica tu clave o intenta de nuevo.', 'bot');
+  }
+  showAILoading(false);
+}
+
+function aiAction(action) {
+  const prompts = {
+    files: '¿Cuántos archivos y carpetas hay en esta carpeta? Dame un resumen detallado.',
+    help: '¿Qué puedo hacer con este NAS? Dame una lista de las funciones principales.',
+    search: '¿Cómo puedo buscar archivos en el NAS?',
+    keys: '¿Qué atajos de teclado están disponibles en el NAS?'
+  };
+  document.getElementById('aiInput').value = prompts[action] || '';
+  sendAIMessage();
 }
 
 // ===== UTILITIES =====
@@ -1616,6 +1793,293 @@ function showToast(msg, type = 'info') {
   t.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i> ${msg}`;
   c.appendChild(t);
   setTimeout(() => { t.style.opacity = '0'; t.style.transition = '.3s'; setTimeout(() => t.remove(), 300); }, 3200);
+}
+
+// ===== AUTH =====
+async function initAuth() {
+  if (typeof google === 'undefined' || !google.accounts) {
+    let waited = 0;
+    while (waited < 10000) {
+      if (typeof google !== 'undefined' && google.accounts) break;
+      await new Promise(r => setTimeout(r, 100));
+      waited += 100;
+    }
+    if (typeof google === 'undefined' || !google.accounts) {
+      console.warn('GIS library failed to load');
+      return;
+    }
+  }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CONFIG.clientId,
+    scope: 'https://www.googleapis.com/auth/drive',
+    callback: tokenResponse => {
+      if (tokenResponse.access_token) {
+        accessToken = tokenResponse.access_token;
+        onAuthSuccess();
+      } else if (tokenResponse.error) {
+        showToast('Error de autenticación: ' + tokenResponse.error, 'error');
+      }
+    },
+  });
+  // Try restoring a previously stored token
+  const saved = localStorage.getItem('nas-token');
+  if (saved) {
+    try {
+      const tok = JSON.parse(saved);
+      const age = Date.now() - tok.time;
+      if (age < 3000000) { // ~35 minutes (tokens last ~60 min)
+        accessToken = tok.token;
+        onAuthSuccess();
+        return;
+      }
+    } catch(_) {}
+    localStorage.removeItem('nas-token');
+  }
+}
+
+function handleAuth() {
+  if (!tokenClient) { showToast('Cargando autenticación...', 'info'); return; }
+  tokenClient.requestAccessToken({ prompt: '' });
+}
+
+function handleSignout() {
+  if (accessToken && google.accounts) {
+    google.accounts.oauth2.revoke(accessToken, () => {});
+  }
+  accessToken = null;
+  localStorage.removeItem('nas-token');
+  document.getElementById('loginBtn').classList.remove('hidden');
+  document.getElementById('userAvatar').classList.add('hidden');
+  document.getElementById('uploadBtn').classList.add('hidden');
+  showToast('Sesión cerrada', 'info');
+}
+
+function onAuthSuccess() {
+  localStorage.setItem('nas-token', JSON.stringify({ token: accessToken, time: Date.now() }));
+  document.getElementById('loginBtn').classList.add('hidden');
+  document.getElementById('userAvatar').classList.remove('hidden');
+  document.getElementById('uploadBtn').classList.remove('hidden');
+  showToast('Sesión iniciada ✓', 'success');
+}
+
+function isAuthenticated() { return !!accessToken; }
+
+function ensureAuth() {
+  if (!isAuthenticated()) {
+    showToast('Necesitas iniciar sesión para esta acción', 'error');
+    handleAuth();
+    return false;
+  }
+  // Refresh token if stored
+  const saved = localStorage.getItem('nas-token');
+  if (saved) {
+    try {
+      const tok = JSON.parse(saved);
+      if (Date.now() - tok.time > 3000000) { // ~35 min
+        localStorage.removeItem('nas-token');
+      }
+    } catch(_) {}
+  }
+  return true;
+}
+
+function getAuthHeaders() {
+  const h = {};
+  if (accessToken) h['Authorization'] = 'Bearer ' + accessToken;
+  return h;
+}
+
+// ===== RENAME =====
+function openRename(id) {
+  if (!ensureAuth()) return;
+  const file = allFiles.find(f => f.id === id);
+  if (!file) return;
+  _renameFileId = id;
+  document.getElementById('renameInput').value = file.name;
+  document.getElementById('renameModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('renameInput').select(), 100);
+}
+
+function closeRenameModal() {
+  document.getElementById('renameModal').classList.add('hidden');
+  _renameFileId = null;
+}
+
+async function confirmRename() {
+  const newName = document.getElementById('renameInput').value.trim();
+  if (!newName || !_renameFileId) return;
+  const id = _renameFileId;
+  closeRenameModal();
+  try {
+    const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ name: newName }),
+    });
+    if (!resp.ok) { const e = await resp.json(); throw new Error(e.error?.message || 'Error al renombrar'); }
+    showToast('Renombrado correctamente', 'success');
+    await loadFolder(currentFolder);
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+// ===== DELETE =====
+async function deleteFile(id) {
+  if (!ensureAuth()) return;
+  const file = allFiles.find(f => f.id === id);
+  if (!file) return;
+  if (!confirm(`¿Eliminar "${file.name}"?\nSe moverá a la papelera de Google Drive.`)) return;
+  try {
+    const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (!resp.ok) { const e = await resp.json(); throw new Error(e.error?.message || 'Error al eliminar'); }
+    showToast('Eliminado correctamente', 'success');
+    selectedFiles.delete(id);
+    await loadFolder(currentFolder);
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+async function deleteSelected() {
+  if (!ensureAuth() || selectedFiles.size === 0) return;
+  if (!confirm(`¿Eliminar ${selectedFiles.size} archivo(s)? Se moverán a la papelera.`)) return;
+  const ids = [...selectedFiles];
+  let ok = 0, fail = 0;
+  for (const id of ids) {
+    try {
+      const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      if (resp.ok) ok++; else fail++;
+    } catch { fail++; }
+  }
+  clearSelection();
+  await loadFolder(currentFolder);
+  showToast(`${ok} eliminado(s)` + (fail ? `, ${fail} error(es)` : ''), fail ? 'error' : 'success');
+}
+
+// ===== NEW FOLDER =====
+function openNewFolder() {
+  if (!ensureAuth()) return;
+  document.getElementById('newFolderInput').value = '';
+  document.getElementById('newFolderModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('newFolderInput').focus(), 100);
+}
+
+function closeNewFolderModal() {
+  document.getElementById('newFolderModal').classList.add('hidden');
+}
+
+async function confirmNewFolder() {
+  const name = document.getElementById('newFolderInput').value.trim();
+  if (!name) return;
+  closeNewFolderModal();
+  try {
+    const resp = await fetch('https://www.googleapis.com/drive/v3/files', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({
+        name,
+        mimeType: 'application/vnd.google-apps.folder',
+        parents: [currentFolder],
+      }),
+    });
+    if (!resp.ok) { const e = await resp.json(); throw new Error(e.error?.message || 'Error al crear carpeta'); }
+    showToast('Carpeta creada', 'success');
+    await loadFolder(currentFolder);
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+// ===== UPLOAD =====
+function openUpload() {
+  if (!isAuthenticated()) {
+    if (confirm('Necesitas iniciar sesión para subir archivos. ¿Iniciar sesión ahora?')) handleAuth();
+    return;
+  }
+  document.getElementById('fileInput').click();
+}
+
+function handleFileSelect(e) {
+  const files = e.target.files;
+  if (!files.length) return;
+  e.target.value = '';
+  uploadFiles(files);
+}
+
+async function uploadFiles(files) {
+  if (!ensureAuth()) return;
+  const modal = document.getElementById('uploadModal');
+  const bar = document.getElementById('uploadProgressBar');
+  const nameEl = document.getElementById('uploadFileName');
+  const infoEl = document.getElementById('uploadFileInfo');
+  modal.classList.remove('hidden');
+
+  let ok = 0, fail = 0;
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    nameEl.textContent = `(${i + 1}/${files.length}) ${file.name}`;
+    infoEl.textContent = formatSize(file.size);
+    bar.style.width = '0%';
+
+    try {
+      const metadata = JSON.stringify({
+        name: file.name,
+        parents: [currentFolder],
+      });
+      const form = new FormData();
+      form.append('metadata', new Blob([metadata], { type: 'application/json' }));
+      form.append('file', file);
+
+      const xhr = new XMLHttpRequest();
+      const p = new Promise((resolve, reject) => {
+        xhr.upload.addEventListener('progress', e => {
+          if (e.lengthComputable) bar.style.width = Math.round((e.loaded / e.total) * 90) + '%';
+        });
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) resolve(); else reject(new Error('Error ' + xhr.status));
+        });
+        xhr.addEventListener('error', () => reject(new Error('Error de red')));
+        xhr.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart');
+        xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+        xhr.send(form);
+      });
+      await p;
+      bar.style.width = '100%';
+      ok++;
+    } catch(e) {
+      fail++;
+      infoEl.textContent = 'Error: ' + e.message;
+    }
+  }
+
+  setTimeout(() => { modal.classList.add('hidden'); }, 800);
+  await loadFolder(currentFolder);
+  showToast(`${ok} subido(s)` + (fail ? `, ${fail} error(es)` : ''), fail ? 'error' : 'success');
+}
+
+function closeUploadModal() {
+  document.getElementById('uploadModal').classList.add('hidden');
+}
+
+// ===== DOWNLOAD SELECTED =====
+async function downloadSelected() {
+  if (selectedFiles.size === 0) return;
+  const ids = [...selectedFiles];
+  if (ids.length === 1) {
+    const f = allFiles.find(x => x.id === ids[0]);
+    if (f && getFileType(f) === 'folder') { showToast('No se pueden descargar carpetas directamente', 'info'); return; }
+    const url = `https://www.googleapis.com/drive/v3/files/${ids[0]}?alt=media${accessToken ? '' : '&key=' + CONFIG.apiKey}`;
+    window.open(url, '_blank');
+    return;
+  }
+  showToast('Abre cada archivo individualmente', 'info');
 }
 
 // ===== RECENT FILES (localStorage) =====
@@ -1653,6 +2117,7 @@ function addRecent(file) {
   if (saved === 'light') document.getElementById('themeBtn').innerHTML = '<i class="fas fa-sun"></i>';
   if (localStorage.getItem('nas-kbhint') !== 'hidden') document.getElementById('kbHint').classList.add('visible');
   await loadFolder(CONFIG.rootFolder);
+  initAuth();
   document.addEventListener('click', () => {
     const hint = document.getElementById('kbHint');
     if (hint.classList.contains('visible')) {
