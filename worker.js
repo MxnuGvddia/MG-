@@ -13,17 +13,18 @@
  */
 
 // Mapa: frontend model key → Cloudflare Workers AI model ID
+// Catálogo real: https://developers.cloudflare.com/workers-ai/models/
 const MODELS = {
-  // === DE PAGO ===
-  'claude-fable-5':   { id: '@cf/anthropic/claude-fable-5',    name: 'Claude Fable 5' },
-  'deepseek-v4-pro':  { id: '@cf/deepseek/deepseek-v4-pro',    name: 'DeepSeek V4 Pro' },
-  'minimax-m3':       { id: '@cf/minimax/m3',                  name: 'MiniMax M3' },
-  'o4-mini':          { id: '@cf/openai/o4-mini',              name: 'o4-mini' },
-  // === GRATUITOS ===
-  'mistral-small':    { id: '@cf/mistral/mistral-small-3.1-24b-instruct',     name: 'Mistral Small 3.1 24B' },
-  'mistral-7b':       { id: '@cf/mistral/mistral-7b-instruct-v0.2-lora',      name: 'Mistral 7B Instruct' },
+  // === DE PAGO (modelos grandes de mayor calidad) ===
+  'gpt-oss-120b':     { id: '@cf/openai/gpt-oss-120b',                         name: 'OpenAI GPT-OSS 120B' },
+  'deepseek-r1':      { id: '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',   name: 'DeepSeek R1 32B' },
+  'qwen3-30b':        { id: '@cf/qwen/qwen3-30b-a3b-fp8',                     name: 'Qwen3 30B-A3B' },
+  'llama-3.3-70b':    { id: '@cf/meta/llama-3.3-70b-instruct-fp8-fast',       name: 'Llama 3.3 70B' },
+  // === GRATUITOS (modelos más ligeros y rápidos) ===
+  'mistral-small':    { id: '@cf/mistralai/mistral-small-3.1-24b-instruct',   name: 'Mistral Small 3.1 24B' },
   'qwq-32b':          { id: '@cf/qwen/qwq-32b',                               name: 'QwQ 32B' },
-  'deepseek-r1':      { id: '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',   name: 'DeepSeek R1 Distill Qwen 32B' },
+  'mistral-7b':       { id: '@cf/mistral/mistral-7b-instruct-v0.2-lora',      name: 'Mistral 7B' },
+  'llama-3.2-3b':     { id: '@cf/meta/llama-3.2-3b-instruct',                 name: 'Llama 3.2 3B' },
 };
 
 export default {
