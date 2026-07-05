@@ -1065,6 +1065,7 @@ const CONFIG = {
   apiKey: 'AIzaSyAGloLcDRyDW62OW8INdwr-7rVfMJYUeg8',
   clientId: '952781470893-m8ndr82u3k8msvjcgl9cc9vqnce1lao6.apps.googleusercontent.com',
   rootFolder: '1AbXlMyDuzhOJZM7-uhlIy1as3J7OLI_A',
+  claudeKey: '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',
 };
 
 let accessToken = null;
@@ -1629,6 +1630,8 @@ document.addEventListener('keydown', e => {
 
 // ===== AI ASSISTANT (Claude API) =====
 const AI_MODEL = 'claude-sonnet-4-20250514';
+const AI_TEMP = 0.0;
+const AI_MAX_TOKENS = 8000;
 let aiMessages = [];
 
 function getAIKey() { return localStorage.getItem('nas-claude-key'); }
@@ -1746,7 +1749,8 @@ async function sendAIMessage() {
       },
       body: JSON.stringify({
         model: AI_MODEL,
-        max_tokens: 512,
+        max_tokens: AI_MAX_TOKENS,
+        temperature: AI_TEMP,
         system: system,
         messages: aiMessages
       })
@@ -2121,6 +2125,10 @@ function addRecent(file) {
   if (saved) document.documentElement.setAttribute('data-theme', saved);
   if (saved === 'light') document.getElementById('themeBtn').innerHTML = '<i class="fas fa-sun"></i>';
   if (localStorage.getItem('nas-kbhint') !== 'hidden') document.getElementById('kbHint').classList.add('visible');
+  if (!localStorage.getItem('nas-claude-key') && CONFIG.claudeKey) {
+    localStorage.setItem('nas-claude-key', CONFIG.claudeKey);
+    document.getElementById('aiKeySetup').style.display = 'none';
+  }
   await loadFolder(CONFIG.rootFolder);
   initAuth();
   document.addEventListener('click', () => {
