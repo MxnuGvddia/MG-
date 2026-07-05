@@ -28,8 +28,8 @@
   --font: 'Inter', system-ui, sans-serif;
   --mono: 'JetBrains Mono', monospace;
   --glow: 0 0 20px rgba(56,189,248,.08);
-  --spring: cubic-bezier(0.34, 2.2, 0.64, 1);
-  --glass-bg: rgba(26, 35, 50, .65);
+  --spring: cubic-bezier(0.34, 2.8, 0.64, 1);
+  --glass-bg: rgba(26, 35, 50, .5);
   --glass-border: rgba(42, 58, 78, .5);
   --glass-shadow: 0 8px 32px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.04);
   --glass-shine: linear-gradient(180deg, rgba(255,255,255,.06) 0%, transparent 100%);
@@ -47,8 +47,8 @@
   --accent-dim: rgba(2, 132, 199, .08);
   --shadow: rgba(0,0,0,.08);
   --glow: none;
-  --spring: cubic-bezier(0.34, 2.2, 0.64, 1);
-  --glass-bg: rgba(255, 255, 255, .6);
+  --spring: cubic-bezier(0.34, 2.8, 0.64, 1);
+  --glass-bg: rgba(255, 255, 255, .45);
   --glass-border: rgba(203, 213, 225, .5);
   --glass-shadow: 0 8px 32px rgba(0,0,0,.08), 0 0 0 1px rgba(255,255,255,.5);
   --glass-shine: linear-gradient(180deg, rgba(255,255,255,.4) 0%, transparent 100%);
@@ -278,7 +278,7 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
 /* ===== BREADCRUMB ===== */
 .breadcrumb-bar {
   padding: 8px 28px;
-  margin-bottom: 8px;
+  margin-bottom: 15px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -336,8 +336,8 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
 .file-item:hover {
   background: var(--bg2);
   border-color: var(--accent);
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 12px 32px var(--shadow), var(--glow);
+  transform: translateY(-8px) scale(1.06);
+  box-shadow: 0 24px 56px var(--shadow), var(--glow);
 }
 .file-item:active { transform: translateY(0) scale(.96); }
 .file-item.selected {
@@ -518,7 +518,7 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
   animation: fadeIn .2s ease;
 }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-20px) scale(.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .modal-content {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -533,7 +533,7 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
   backdrop-filter: blur(32px) saturate(185%);
 }
 @keyframes modalIn {
-  from { opacity: 0; transform: scale(.85) translateY(24px); }
+  from { opacity: 0; transform: scale(.7) translateY(48px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 @keyframes scaleIn { from { transform: scale(.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -592,7 +592,7 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
   -webkit-backdrop-filter: blur(32px) saturate(185%);
 }
 @keyframes menuIn {
-  from { transform: scale(.86) translateY(-6px); opacity: 0; }
+  from { transform: scale(.7) translateY(-14px); opacity: 0; }
   to { transform: scale(1) translateY(0); opacity: 1; }
 }
 .context-menu .item {
@@ -734,7 +734,7 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
   backdrop-filter: blur(32px) saturate(185%);
 }
 .ai-panel.open { display: flex; }
-@keyframes slideUp { from { transform: translateY(24px) scale(.90); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(48px) scale(.75); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
 .ai-header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--glass-border);
@@ -882,15 +882,15 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
 .toast.success { border-left: 3px solid var(--success); }
 
 /* ===== FILE LIST TRANSITIONS ===== */
-.file-fade-enter { animation: fileFadeIn .4s var(--spring) both; }
-.file-fade-leave { animation: fileFadeOut .25s ease both; }
+.file-fade-enter { animation: fileFadeIn .55s var(--spring) both; }
+.file-fade-leave { animation: fileFadeOut .3s ease both; }
 @keyframes fileFadeIn {
-  from { opacity: 0; transform: scale(.88) translateY(14px); }
+  from { opacity: 0; transform: scale(.7) translateY(30px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 @keyframes fileFadeOut {
   from { opacity: 1; transform: scale(1) translateY(0); }
-  to { opacity: 0; transform: scale(.92) translateY(-8px); }
+  to { opacity: 0; transform: scale(.88) translateY(-12px); }
 }
 
 /* ===== SHIMMER LOADING ===== */
