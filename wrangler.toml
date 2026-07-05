@@ -1,0 +1,6 @@
+name = "mg-nas-ai"
+main = "worker.js"
+compatibility_date = "2025-07-01"
+
+[[ai]]
+binding = "AI"

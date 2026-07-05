@@ -776,6 +776,24 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
 }
 .ai-footer button:hover { opacity: .85; }
 
+/* ===== MODEL SELECTOR ===== */
+.ai-model-select {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 12px;
+  font-family: var(--font);
+  padding: 4px 8px;
+  outline: none;
+  cursor: pointer;
+  max-width: 160px;
+  transition: border-color .2s;
+}
+.ai-model-select:focus { border-color: var(--accent); }
+.ai-model-select optgroup { font-size: 11px; color: var(--text2); font-style: normal; }
+.ai-model-select option { font-size: 12px; color: var(--text); background: var(--bg); }
+
 /* ===== TOAST ===== */
 .toast-container {
   position: fixed;
@@ -1031,7 +1049,23 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
 <button class="ai-fab" id="aiFab" onclick="toggleAI()"><i class="fas fa-robot"></i></button>
 <div class="ai-panel" id="aiPanel">
   <div class="ai-header">
-    <h3><i class="fas fa-sparkles"></i> Asistente IA</h3>
+    <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+      <h3><i class="fas fa-sparkles"></i> Asistente IA</h3>
+      <select id="aiModelSelect" class="ai-model-select">
+        <optgroup label="✦ De pago">
+          <option value="claude-fable-5">Claude Fable 5</option>
+          <option value="deepseek-v4-pro">DeepSeek V4 Pro</option>
+          <option value="minimax-m3">MiniMax M3</option>
+          <option value="o4-mini">o4-mini</option>
+        </optgroup>
+        <optgroup label="☆ Gratuitos">
+          <option value="mistral-small">Mistral Small 3.1 24B</option>
+          <option value="mistral-7b">Mistral 7B Instruct</option>
+          <option value="qwq-32b">QwQ 32B</option>
+          <option value="deepseek-r1">DeepSeek R1 Distill</option>
+        </optgroup>
+      </select>
+    </div>
     <button class="ai-close" onclick="toggleAI()"><i class="fas fa-times"></i></button>
   </div>
   <div class="ai-body" id="aiBody">
@@ -1055,7 +1089,7 @@ const CONFIG = {
   apiKey: 'AIzaSyAGloLcDRyDW62OW8INdwr-7rVfMJYUeg8',
   clientId: '952781470893-m8ndr82u3k8msvjcgl9cc9vqnce1lao6.apps.googleusercontent.com',
   rootFolder: '1AbXlMyDuzhOJZM7-uhlIy1as3J7OLI_A',
-  aiProxyUrl: '', // ← pon aquí la URL de tu Worker de Cloudflare, ej: 'https://nas-ai-proxy.tu-usuario.workers.dev'
+  aiProxyUrl: '', // ← pon aquí la URL de tu Worker de Cloudflare, ej: 'https://mg-nas-ai.tu-usuario.workers.dev'
 };
 
 let accessToken = null;
@@ -1618,8 +1652,8 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ===== AI ASSISTANT (Claude API) =====
-const AI_MODEL = 'claude-sonnet-4-20250514';
+// ===== AI ASSISTANT (Cloudflare Workers AI) =====
+const AI_MODEL = () => document.getElementById('aiModelSelect')?.value || 'mistral-small';
 const AI_TEMP = 0.0;
 const AI_MAX_TOKENS = 8000;
 let aiMessages = [];
@@ -1719,7 +1753,7 @@ async function sendAIMessage() {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        model: AI_MODEL,
+        model: AI_MODEL(),
         max_tokens: AI_MAX_TOKENS,
         temperature: AI_TEMP,
         system: system,
