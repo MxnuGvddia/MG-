@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NAS Online - Gestor de Archivos</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117;
+  --bg2: #161b22;
+  --bg3: #21262d;
+  --border: #30363d;
+  --text: #f0f6fc;
+  --text2: #8b949e;
+  --accent: #58a6ff;
+  --accent2: #1f6feb;
+  --hover: #1c2128;
+  --success: #3fb950;
+  --danger: #f85149;
+  --warning: #d29922;
+  --shadow: rgba(0,0,0,.4);
+  --radius: 8px;
+  --font: 'Inter', system-ui, sans-serif;
+}
+[data-theme="light"] {
+  --bg: #ffffff;
+  --bg2: #f6f8fa;
+  --bg3: #eaeef2;
+  --border: #d0d7de;
+  --text: #1f2328;
+  --text2: #656d76;
+  --accent: #0969da;
+  --accent2: #0550ae;
+  --hover: #e8eaed;
+  --shadow: rgba(0,0,0,.1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+a { color: var(--accent); text-decoration: none; }
+.hidden { display: none !important; }
+
+/* Header */
+header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+header h1 i { color: var(--accent); }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.theme-btn, .view-btn, .upload-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: .2s;
+}
+.theme-btn:hover, .view-btn:hover, .upload-btn:hover {
+  background: var(--hover);
+  border-color: var(--accent);
+}
+.upload-btn {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: #fff;
+}
+.upload-btn:hover { opacity: .85; }
+
+/* Search */
+.search-bar {
+  padding: 16px 24px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.search-bar input {
+  flex: 1;
+  padding: 10px 14px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font);
+  outline: none;
+  transition: .2s;
+}
+.search-bar input:focus { border-color: var(--accent); }
+.search-bar input::placeholder { color: var(--text2); }
+
+/* Breadcrumb */
+.breadcrumb {
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text2);
+  flex-wrap: wrap;
+}
+.breadcrumb span {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: .2s;
+}
+.breadcrumb span:hover {
+  background: var(--hover);
+  color: var(--accent);
+}
+.breadcrumb .sep { cursor: default; color: var(--text2); opacity: .5; }
+
+/* Toolbar */
+.toolbar {
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.filter-group { display: flex; gap: 4px; }
+.filter-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--font);
+  transition: .2s;
+}
+.filter-btn:hover { color: var(--text); border-color: var(--text2); }
+.filter-btn.active {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: #fff;
+}
+.selection-bar {
+  background: var(--accent2);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.selection-bar button {
+  background: rgba(255,255,255,.15);
+  border: none;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font);
+}
+.selection-bar button:hover { background: rgba(255,255,255,.25); }
+
+/* Viewport */
+#viewport {
+  padding: 8px 24px 100px;
+}
+#viewport.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+#viewport.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Items */
+.file-item {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  cursor: pointer;
+  transition: .2s;
+  position: relative;
+  user-select: none;
+}
+.file-item:hover { background: var(--hover); border-color: var(--accent); }
+.file-item.selected {
+  background: rgba(88,166,255,.12);
+  border-color: var(--accent);
+}
+#viewport.grid .file-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 16px 12px;
+}
+#viewport.grid .file-item .icon { font-size: 32px; }
+#viewport.grid .file-item .name {
+  font-size: 13px;
+  word-break: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+#viewport.grid .file-item .meta { display: none; }
+
+#viewport.list .file-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+}
+#viewport.list .file-item .icon { font-size: 20px; width: 28px; text-align: center; }
+#viewport.list .file-item .name { flex: 1; font-size: 14px; }
+#viewport.list .file-item .meta {
+  font-size: 12px;
+  color: var(--text2);
+  display: flex;
+  gap: 16px;
+}
+.file-item .thumb {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: var(--bg3);
+}
+#viewport.grid .file-item .thumb { width: 100%; height: 100px; object-fit: cover; }
+.file-item .check {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 20px; height: 20px;
+  border: 2px solid var(--text2);
+  border-radius: 4px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  background: var(--bg);
+}
+.file-item.selected .check { display: flex; background: var(--accent); border-color: var(--accent); color: #fff; }
+.file-item.folder .icon { color: var(--warning); }
+.file-item.image .icon { color: #7ee787; }
+.file-item.video .icon { color: #d2a8ff; }
+.file-item.audio .icon { color: #ffa657; }
+.file-item.pdf .icon { color: #f85149; }
+.file-item.code .icon { color: #79c0ff; }
+.file-item.archive .icon { color: #bc8cff; }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text2);
+}
+.empty-state i { font-size: 48px; margin-bottom: 16px; opacity: .5; }
+.empty-state h3 { font-size: 18px; margin-bottom: 8px; }
+.empty-state p { font-size: 14px; }
+
+/* Preview Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.85);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(4px);
+}
+.modal-content {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 100%;
+  overflow: auto;
+  position: relative;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+.modal-header h3 { font-size: 16px; font-weight: 600; }
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.modal-close:hover { background: var(--hover); }
+.modal-body { padding: 20px; }
+.modal-body img { max-width: 100%; max-height: 70vh; display: block; margin: 0 auto; border-radius: 4px; }
+.modal-body video, .modal-body audio { width: 100%; border-radius: 4px; }
+.modal-body iframe { width: 100%; height: 70vh; border: none; border-radius: 4px; }
+.modal-body pre {
+  background: var(--bg2);
+  padding: 16px;
+  border-radius: 6px;
+  overflow: auto;
+  max-height: 60vh;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Context Menu */
+.context-menu {
+  position: fixed;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  min-width: 180px;
+  z-index: 2000;
+  box-shadow: 0 8px 24px var(--shadow);
+}
+.context-menu div {
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: .1s;
+}
+.context-menu div:hover { background: var(--accent2); color: #fff; }
+.context-menu div i { width: 16px; text-align: center; }
+
+/* Config screen */
+.config-screen {
+  max-width: 520px;
+  margin: 60px auto;
+  padding: 0 24px;
+  text-align: center;
+}
+.config-screen h2 { margin-bottom: 12px; }
+.config-screen p { color: var(--text2); margin-bottom: 24px; line-height: 1.6; }
+.config-screen .note {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: left;
+  font-size: 13px;
+}
+.config-screen .note code {
+  background: var(--bg3);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+/* Toast */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 12px var(--shadow);
+  animation: slideIn .3s ease;
+  min-width: 280px;
+}
+.toast.success { border-left: 4px solid var(--success); }
+.toast.error { border-left: 4px solid var(--danger); }
+.toast.info { border-left: 4px solid var(--accent); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* Loading */
+.loading {
+  text-align: center;
+  padding: 60px;
+  color: var(--text2);
+}
+.loading i { font-size: 32px; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Loading skeleton */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg2) 25%, var(--bg3) 50%, var(--bg2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ===== AI ASSISTANT ===== */
+.ai-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #58a6ff, #1f6feb);
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(88,166,255,.4);
+  z-index: 900;
+  transition: .3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ai-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 28px rgba(88,166,255,.5);
+}
+.ai-fab.active { transform: rotate(45deg); }
+
+.ai-panel {
+  position: fixed;
+  bottom: 92px;
+  right: 24px;
+  width: 380px;
+  max-height: 520px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px var(--shadow);
+  z-index: 899;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp .3s ease;
+}
+.ai-panel.open { display: flex; }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.ai-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(88,166,255,.1), transparent);
+}
+.ai-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ai-header h3 i { color: var(--accent); }
+.ai-close {
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+.ai-close:hover { color: var(--text); }
+
+.ai-body {
+  flex: 1;
+  padding: 16px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ai-body .message {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 85%;
+}
+.ai-body .message.bot {
+  background: var(--bg3);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+.ai-body .message.user {
+  background: var(--accent2);
+  color: #fff;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+.ai-body .quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0;
+}
+.ai-body .quick-actions button {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font);
+  transition: .2s;
+}
+.ai-body .quick-actions button:hover {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: #fff;
+}
+.ai-body .context-info {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--text2);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ai-body .context-info span { display: flex; align-items: center; gap: 6px; }
+.ai-body .context-info i { width: 14px; text-align: center; color: var(--accent); }
+
+.ai-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+}
+.ai-footer input {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--font);
+  outline: none;
+}
+.ai-footer input:focus { border-color: var(--accent); }
+.ai-footer button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent2);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: .2s;
+}
+.ai-footer button:hover { opacity: .85; }
+
+/* Responsive */
+@media (max-width: 640px) {
+  header { padding: 10px 12px; }
+  header h1 { font-size: 16px; }
+  .search-bar, .breadcrumb, .toolbar, #viewport { padding-left: 12px; padding-right: 12px; }
+  #viewport.grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .ai-panel { width: calc(100vw - 24px); right: 12px; bottom: 86px; max-height: 60vh; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1><i class="fas fa-server"></i> NAS Online</h1>
+  <div class="header-actions">
+    <button class="view-btn" onclick="toggleView()" title="Cambiar vista"><i class="fas fa-grip"></i></button>
+    <button class="upload-btn" onclick="openUpload()"><i class="fas fa-upload"></i> Subir</button>
+    <button class="theme-btn" onclick="toggleTheme()" title="Cambiar tema"><i class="fas fa-moon"></i></button>
+  </div>
+</header>
+
+<div class="search-bar">
+  <input type="text" id="searchInput" placeholder="Buscar archivos..." oninput="handleSearch(this.value)">
+  <button class="theme-btn" onclick="document.getElementById('searchInput').value='';handleSearch('')"><i class="fas fa-times"></i></button>
+</div>
+
+<div class="breadcrumb" id="breadcrumb"></div>
+
+<div class="toolbar">
+  <div class="toolbar-left">
+    <div class="filter-group" id="filterGroup">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Todos</button>
+      <button class="filter-btn" data-filter="folder" onclick="setFilter('folder')"><i class="fas fa-folder"></i></button>
+      <button class="filter-btn" data-filter="image" onclick="setFilter('image')"><i class="fas fa-image"></i></button>
+      <button class="filter-btn" data-filter="video" onclick="setFilter('video')"><i class="fas fa-video"></i></button>
+      <button class="filter-btn" data-filter="audio" onclick="setFilter('audio')"><i class="fas fa-music"></i></button>
+      <button class="filter-btn" data-filter="pdf" onclick="setFilter('pdf')"><i class="fas fa-file-pdf"></i></button>
+      <button class="filter-btn" data-filter="code" onclick="setFilter('code')"><i class="fas fa-code"></i></button>
+      <button class="filter-btn" data-filter="archive" onclick="setFilter('archive')"><i class="fas fa-file-archive"></i></button>
+    </div>
+  </div>
+  <div id="selectionBar" class="selection-bar hidden">
+    <span id="selCount">0 seleccionados</span>
+    <button onclick="clearSelection()"><i class="fas fa-times"></i> Quitar</button>
+  </div>
+</div>
+
+<div id="viewport"></div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- AI Assistant -->
+<button class="ai-fab" id="aiFab" onclick="toggleAI()"><i class="fas fa-robot"></i></button>
+
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-header">
+    <h3><i class="fas fa-sparkles"></i> Asistente IA</h3>
+    <button class="ai-close" onclick="toggleAI()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="ai-body" id="aiBody">
+    <div class="message bot">Hola, soy tu asistente. Puedo ayudarte a navegar tus archivos, buscar cosas o darte información sobre el NAS.</div>
+    <div class="quick-actions">
+      <button onclick="aiAction('files')"><i class="fas fa-folder-open"></i> Total archivos</button>
+      <button onclick="aiAction('help')"><i class="fas fa-question-circle"></i> Ayuda</button>
+      <button onclick="aiAction('search')"><i class="fas fa-search"></i> Buscar</button>
+      <button onclick="aiAction('about')"><i class="fas fa-info-circle"></i> Acerca de</button>
+    </div>
+  </div>
+  <div class="ai-footer">
+    <input type="text" id="aiInput" placeholder="Pregúntame algo..." onkeydown="if(event.key==='Enter')sendAIMessage()">
+    <button onclick="sendAIMessage()"><i class="fas fa-arrow-up"></i></button>
+  </div>
+</div>
+
+<script>
+const CONFIG = {
+  apiKey: 'AIzaSyAGloLcDRyDW62OW8INdwr-7rVfMJYUeg8',
+  rootFolder: '1AbXlMyDuzhOJZM7-uhlIy1as3J7OLI_A',
+};
+
+let currentFolder = CONFIG.rootFolder;
+let folderStack = [];
+let allFiles = [];
+let currentFiles = [];
+let currentFilter = 'all';
+let viewMode = 'grid';
+let selectedFiles = new Set();
+let clipboard = null;
+
+// Files
+async function loadFolder(folderId) {
+  const vp = document.getElementById('viewport');
+  vp.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i><p style="margin-top:12px">Cargando...</p></div>';
+  currentFolder = folderId;
+  try {
+    const q = `'${folderId}' in parents and trashed=false`;
+    const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,size,modifiedTime,thumbnailLink,iconLink,webViewLink,fileExtension)&pageSize=1000&orderBy=folder,name_natural&key=${CONFIG.apiKey}`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`API Error ${resp.status}: ${resp.statusText}`);
+    const data = await resp.json();
+    allFiles = data.files || [];
+    applyFilters();
+    updateBreadcrumb(folderId);
+  } catch(e) {
+    vp.innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h3>Error al cargar</h3>
+        <p>${e.message || 'No se pudieron cargar los archivos. Verifica la API key y los permisos de la carpeta.'}</p>
+      </div>`;
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+function applyFilters() {
+  let filtered = [...allFiles];
+  if (currentFilter !== 'all') {
+    filtered = filtered.filter(f => getFileType(f) === currentFilter);
+  }
+  const searchVal = document.getElementById('searchInput').value.toLowerCase();
+  if (searchVal) {
+    filtered = filtered.filter(f => f.name.toLowerCase().includes(searchVal));
+  }
+  currentFiles = filtered;
+  renderFiles(filtered);
+}
+
+function getFileType(file) {
+  const mime = file.mimeType;
+  if (mime === 'application/vnd.google-apps.folder') return 'folder';
+  if (mime.startsWith('image/')) return 'image';
+  if (mime.startsWith('video/')) return 'video';
+  if (mime.startsWith('audio/')) return 'audio';
+  if (mime === 'application/pdf' || mime.includes('document') || mime.includes('spreadsheet') || mime.includes('presentation')) return 'pdf';
+  if (['text/', 'application/json', 'application/javascript', 'text/html', 'text/css', 'text/x-python', 'text/x-java', 'text/x-c', 'text/x-rust', 'text/markdown', 'application/xml', 'text/xml'].some(t => mime.startsWith(t) || mime === t) || /\.(js|ts|py|java|c|cpp|h|rs|go|rb|php|sh|bash|yaml|yml|toml|json|xml|html|css|scss|less|md|sql|r|lua|swift|kt)$/i.test(file.name)) return 'code';
+  if (mime.includes('zip') || mime.includes('rar') || mime.includes('tar') || mime.includes('gzip') || mime.includes('compress') || /\.(zip|rar|tar|gz|7z|bz2)$/i.test(file.name)) return 'archive';
+  return 'other';
+}
+
+function getFileIcon(file) {
+  const type = getFileType(file);
+  const icons = { folder: 'fa-folder', image: 'fa-file-image', video: 'fa-file-video', audio: 'fa-file-audio', pdf: 'fa-file-pdf', code: 'fa-file-code', archive: 'fa-file-archive', other: 'fa-file' };
+  return icons[type] || 'fa-file';
+}
+
+function formatSize(bytes) {
+  if (!bytes) return '';
+  const u = ['B','KB','MB','GB'];
+  let i = 0; let s = parseInt(bytes);
+  while (s >= 1024 && i < 3) { s /= 1024; i++; }
+  return s.toFixed(i>0?1:0) + ' ' + u[i];
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  return date.toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + date.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+}
+
+function renderFiles(files) {
+  const vp = document.getElementById('viewport');
+  if (!files.length) {
+    vp.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><h3>Carpeta vacía</h3><p>No hay archivos aquí</p></div>';
+    return;
+  }
+  vp.innerHTML = files.map(f => {
+    const type = getFileType(f);
+    const icon = getFileIcon(f);
+    const thumb = f.thumbnailLink || (type === 'image' ? `https://lh3.googleusercontent.com/d/${f.id}=w400` : '');
+    const sel = selectedFiles.has(f.id) ? 'selected' : '';
+    return `<div class="file-item ${type} ${sel}" data-id="${f.id}" onclick="handleClick(this,'${f.id}')" oncontextmenu="showContextMenu(event,'${f.id}')">
+      <div class="check"><i class="fas fa-check"></i></div>
+      ${thumb ? `<img class="thumb" src="${thumb}" loading="lazy">` : `<div class="icon"><i class="fas ${icon}"></i></div>`}
+      <div class="name">${f.name}</div>
+      <div class="meta">
+        <span>${formatSize(f.size)}</span>
+        <span>${formatDate(f.modifiedTime)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Selection
+function handleClick(el, id) {
+  if (window.getSelection().toString()) return;
+  const fromKey = window.event && (window.event.ctrlKey || window.event.metaKey);
+  if (fromKey) {
+    if (selectedFiles.has(id)) { selectedFiles.delete(id); el.classList.remove('selected'); }
+    else { selectedFiles.add(id); el.classList.add('selected'); }
+    updateSelectionBar();
+    return;
+  }
+  const file = allFiles.find(f => f.id === id);
+  if (!file) return;
+  if (getFileType(file) === 'folder') {
+    if (folderStack[folderStack.length-1] !== currentFolder) folderStack.push(currentFolder);
+    loadFolder(id);
+  } else {
+    previewFile(file);
+  }
+}
+
+function updateSelectionBar() {
+  const bar = document.getElementById('selectionBar');
+  const count = document.getElementById('selCount');
+  if (selectedFiles.size > 0) {
+    bar.classList.remove('hidden');
+    count.textContent = selectedFiles.size + ' seleccionado' + (selectedFiles.size > 1 ? 's' : '');
+  } else {
+    bar.classList.add('hidden');
+  }
+}
+
+function clearSelection() {
+  selectedFiles.clear();
+  document.querySelectorAll('.file-item.selected').forEach(el => el.classList.remove('selected'));
+  updateSelectionBar();
+}
+
+// Search
+let searchTimeout;
+function handleSearch(val) {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => applyFilters(), 300);
+}
+
+// Filter
+function setFilter(filter) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
+  applyFilters();
+}
+
+// View
+function toggleView() {
+  viewMode = viewMode === 'grid' ? 'list' : 'grid';
+  document.querySelector('.view-btn i').className = viewMode === 'grid' ? 'fas fa-grip' : 'fas fa-list';
+  document.getElementById('viewport').className = viewMode;
+  renderFiles(currentFiles);
+}
+
+// Theme
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.querySelector('.theme-btn i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+  localStorage.setItem('nas-theme', isDark ? 'light' : 'dark');
+}
+
+// Breadcrumb
+async function updateBreadcrumb(folderId) {
+  const bc = document.getElementById('breadcrumb');
+  const parts = [{ id: CONFIG.rootFolder, name: 'NAS' }];
+  try {
+    if (folderId !== CONFIG.rootFolder) {
+      let current = folderId;
+      const chain = [];
+      while (current && current !== CONFIG.rootFolder) {
+        const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${current}?fields=id,name,parents&key=${CONFIG.apiKey}`);
+        if (!resp.ok) break;
+        const data = await resp.json();
+        chain.unshift({ id: data.id, name: data.name });
+        current = data.parents ? data.parents[0] : null;
+      }
+      parts.push(...chain);
+    }
+  } catch(_) {}
+  bc.innerHTML = parts.map((p, i) => {
+    const isLast = i === parts.length - 1;
+    const sep = i > 0 ? '<span class="sep">/</span>' : '';
+    return sep + (isLast ? `<span style="color:var(--text);font-weight:500">${p.name}</span>` : `<span onclick="navigateTo('${p.id}')">${p.name}</span>`);
+  }).join('');
+}
+
+function navigateTo(id) {
+  folderStack = [];
+  loadFolder(id);
+}
+
+// Upload
+function openUpload() {
+  const url = `https://drive.google.com/drive/folders/${currentFolder}`;
+  window.open(url, '_blank');
+  showToast('Abriendo Google Drive para subir archivos', 'info');
+}
+
+// Preview
+async function previewFile(file) {
+  const type = getFileType(file);
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  const close = () => overlay.remove();
+  document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', esc); } });
+
+  let body = '';
+  if (type === 'image') {
+    body = `<img src="https://lh3.googleusercontent.com/d/${file.id}=w1600" alt="${file.name}">`;
+  } else if (type === 'video') {
+    const src = `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${CONFIG.apiKey}`;
+    body = `<video controls autoplay><source src="${src}"><p>Tu navegador no soporta video.</p></video>`;
+  } else if (type === 'audio') {
+    const src = `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${CONFIG.apiKey}`;
+    body = `<audio controls autoplay><source src="${src}"><p>Tu navegador no soporta audio.</p></audio>`;
+  } else if (type === 'pdf' || file.mimeType.includes('document') || file.mimeType.includes('spreadsheet') || file.mimeType.includes('presentation')) {
+    body = `<iframe src="https://drive.google.com/file/d/${file.id}/preview"></iframe>`;
+  } else if (type === 'code') {
+    try {
+      const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${CONFIG.apiKey}`);
+      const text = await resp.text();
+      body = `<pre><code>${escapeHtml(text)}</code></pre>`;
+    } catch { body = '<p style="color:var(--danger)">Error al cargar el contenido del archivo.</p>'; }
+  } else {
+    body = `<p style="color:var(--text2);text-align:center;padding:40px">
+      Vista previa no disponible para este tipo de archivo.<br>
+      <a href="${file.webViewLink || `https://drive.google.com/file/d/${file.id}/view`}" target="_blank" style="margin-top:12px;display:inline-block">
+        <i class="fas fa-external-link-alt"></i> Abrir en Google Drive
+      </a>
+    </p>`;
+  }
+
+  overlay.innerHTML = `<div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fas ${getFileIcon(file)}" style="margin-right:8px"></i>${file.name}</h3>
+      <div style="display:flex;gap:8px">
+        <button class="modal-close" onclick="downloadFile('${file.id}')" title="Descargar"><i class="fas fa-download"></i></button>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
+    <div class="modal-body">${body}</div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+// Context menu
+function showContextMenu(e, id) {
+  e.preventDefault();
+  const file = allFiles.find(f => f.id === id);
+  if (!file) return;
+  closeContextMenu();
+  const menu = document.createElement('div');
+  menu.className = 'context-menu';
+  menu.style.left = e.clientX + 'px';
+  menu.style.top = e.clientY + 'px';
+  const type = getFileType(file);
+  const items = [
+    { icon: 'fa-download', text: 'Descargar', action: () => downloadFile(id) },
+    type !== 'folder' ? { icon: 'fa-eye', text: 'Vista previa', action: () => previewFile(file) } : null,
+    { icon: 'fa-link', text: 'Copiar enlace', action: () => copyLink(id) },
+    { icon: 'fa-external-link-alt', text: 'Abrir en Drive', action: () => window.open(file.webViewLink || `https://drive.google.com/file/d/${id}/view`, '_blank') },
+    type === 'folder' ? null : { icon: 'fa-i-cursor', text: 'Renombrar', action: () => showToast('Renombrar requiere OAuth', 'info') },
+    { icon: 'fa-trash', text: 'Eliminar', action: () => showToast('Eliminar requiere OAuth', 'info') },
+  ].filter(Boolean);
+  menu.innerHTML = items.map(it => `<div onclick="closeContextMenu();${it.action.toString()}"><i class="fas ${it.icon}"></i> ${it.text}</div>`).join('');
+  document.body.appendChild(menu);
+  setTimeout(() => document.addEventListener('click', closeContextMenu, { once: true }), 0);
+}
+
+function closeContextMenu() {
+  document.querySelectorAll('.context-menu').forEach(el => el.remove());
+}
+
+function downloadFile(id) {
+  window.open(`https://www.googleapis.com/drive/v3/files/${id}?alt=media&key=${CONFIG.apiKey}`, '_blank');
+}
+
+async function copyLink(id) {
+  try {
+    await navigator.clipboard.writeText(`https://drive.google.com/file/d/${id}/view`);
+    showToast('Enlace copiado al portapapeles', 'success');
+  } catch { showToast('No se pudo copiar', 'error'); }
+}
+
+// AI Assistant
+function toggleAI() {
+  const panel = document.getElementById('aiPanel');
+  const fab = document.getElementById('aiFab');
+  panel.classList.toggle('open');
+  fab.classList.toggle('active');
+  if (panel.classList.contains('open')) {
+    document.getElementById('aiInput').focus();
+    updateAIContext();
+  }
+}
+
+function updateAIContext() {
+  const body = document.getElementById('aiBody');
+  let ctx = body.querySelector('.context-info');
+  if (!ctx) {
+    ctx = document.createElement('div');
+    ctx.className = 'context-info';
+    body.insertBefore(ctx, body.querySelector('.quick-actions'));
+  }
+  const totalFiles = allFiles.length;
+  const folders = allFiles.filter(f => getFileType(f) === 'folder').length;
+  const images = allFiles.filter(f => getFileType(f) === 'image').length;
+  const videos = allFiles.filter(f => getFileType(f) === 'video').length;
+  const totalSize = allFiles.reduce((s, f) => s + (parseInt(f.size) || 0), 0);
+  ctx.innerHTML = `
+    <span><i class="fas fa-folder"></i> ${folders} carpetas</span>
+    <span><i class="fas fa-file"></i> ${totalFiles - folders} archivos</span>
+    <span><i class="fas fa-image"></i> ${images} imágenes · <i class="fas fa-video"></i> ${videos} videos</span>
+    <span><i class="fas fa-database"></i> ${formatSize(totalSize)} total</span>
+  `;
+}
+
+function aiAction(action) {
+  const body = document.getElementById('aiBody');
+  const addMsg = (text, cls) => {
+    const d = document.createElement('div');
+    d.className = 'message ' + cls;
+    d.textContent = text;
+    body.insertBefore(d, body.querySelector('.quick-actions'));
+    body.scrollTop = body.scrollHeight;
+  };
+  switch(action) {
+    case 'files':
+      const folders = allFiles.filter(f => getFileType(f) === 'folder').length;
+      addMsg(`Hay ${allFiles.length} elementos en total: ${folders} carpetas y ${allFiles.length - folders} archivos.`, 'bot');
+      break;
+    case 'help':
+      addMsg('Puedes navegar las carpetas haciendo clic, buscar archivos con la barra de búsqueda, filtrar por tipo con los botones, y hacer clic derecho en cualquier archivo para ver opciones adicionales.', 'bot');
+      break;
+    case 'search':
+      document.getElementById('searchInput').focus();
+      addMsg('Escribe en la barra de búsqueda para encontrar archivos por nombre.', 'bot');
+      break;
+    case 'about':
+      addMsg('NAS Online v1.0 — Gestor de archivos con Google Drive. Creado por Mxnu.', 'bot');
+      break;
+  }
+}
+
+async function sendAIMessage() {
+  const input = document.getElementById('aiInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  const body = document.getElementById('aiBody');
+  const addMsg = (content, cls) => {
+    const d = document.createElement('div');
+    d.className = 'message ' + cls;
+    d.textContent = content;
+    body.insertBefore(d, body.querySelector('.quick-actions'));
+    body.scrollTop = body.scrollHeight;
+  };
+  addMsg(text, 'user');
+  const lower = text.toLowerCase();
+  let response = '';
+  if (lower.includes('archivo') || lower.includes('cuánto') || lower.includes('cuantos') || lower.includes('total') || lower.includes('elemento') || lower.includes('carpeta')) {
+    const folders = allFiles.filter(f => getFileType(f) === 'folder').length;
+    response = `Hay ${allFiles.length} elementos en total: ${folders} carpetas y ${allFiles.length - folders} archivos.`;
+  } else if (lower.includes('buscar') || lower.includes('encuentra')) {
+    const term = text.replace(/buscar|encuentra|encuentrame|localiza|dónde está|donde esta/gi, '').trim();
+    if (term) {
+      const matches = allFiles.filter(f => f.name.toLowerCase().includes(term.toLowerCase()));
+      if (matches.length) response = `Encontré ${matches.length} archivo(s) que coinciden con "${term}":\n${matches.slice(0, 10).map(f => '• ' + f.name).join('\n')}${matches.length > 10 ? `\n...y ${matches.length - 10} más` : ''}`;
+      else response = `No encontré archivos que coincidan con "${term}".`;
+    } else response = '¿Qué archivo te gustaría buscar? Escribe "buscar nombre_del_archivo"';
+  } else if (lower.includes('ayuda') || lower.includes('help')) {
+    response = 'Puedes hacer clic en las carpetas para navegar, usar la barra de búsqueda, filtrar por tipo, o hacer clic derecho en un archivo para descargarlo/copiar enlace.';
+  } else if (lower.includes('hola') || lower.includes('buenas') || lower.includes('qué tal') || lower.includes('que tal') || lower.includes('gracias')) {
+    response = '¡Hola! Estoy aquí para ayudarte con tu NAS. Pregúntame lo que necesites.';
+  } else {
+    response = 'Puedo ayudarte a contar archivos, buscar por nombre o darte información general. ¿Qué necesitas?';
+  }
+  setTimeout(() => addMsg(response, 'bot'), 300);
+}
+
+function escapeHtml(t) {
+  const d = document.createElement('div');
+  d.textContent = t;
+  return d.innerHTML;
+}
+
+// Toast
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+  t.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i> ${msg}`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = '.3s'; setTimeout(() => t.remove(), 300); }, 3500);
+}
+
+// Init
+(async function init() {
+  if (!CONFIG.apiKey || CONFIG.apiKey.includes('TU_API')) {
+    document.getElementById('viewport').innerHTML = `
+      <div class="config-screen">
+        <h2><i class="fas fa-key" style="color:var(--accent)"></i> Configuración requerida</h2>
+        <p>Para usar NAS Online necesitas configurar una API key de Google Drive.</p>
+        <div class="note">
+          <strong>Pasos:</strong><br><br>
+          1. Ve a <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a><br>
+          2. Crea o selecciona un proyecto<br>
+          3. Activa la <strong>Google Drive API</strong><br>
+          4. Crea una <strong>API Key</strong><br>
+          5. Abre el código y reemplaza <code>TU_API_KEY</code> en <code>CONFIG.apiKey</code><br><br>
+          <strong>Importante:</strong> La carpeta raíz debe tener permisos de "Cualquier persona con el enlace".
+        </div>
+      </div>`;
+    return;
+  }
+  const saved = localStorage.getItem('nas-theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+  await loadFolder(CONFIG.rootFolder);
+})();
+</script>
+</body>
+</html>
