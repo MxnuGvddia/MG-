@@ -57,49 +57,37 @@
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* ===== LIQUID GLASS BORDER UTILITY ===== */
+/* ===== LIQUID DROPLET BORDER UTILITY ===== */
 @property --border-angle {
   syntax: '<angle>';
   inherits: false;
   initial-value: 0deg;
 }
-.liquid-b {
+.liquid-b, .liquid-b--alt {
   position: relative;
   z-index: 0;
 }
-.liquid-b::before {
+.liquid-b::before, .liquid-b--alt::after {
   content: '';
   position: absolute;
   inset: -1.5px;
   border-radius: inherit;
   z-index: -1;
+  opacity: .3;
   background: conic-gradient(from var(--border-angle),
-    var(--glass-border),
-    var(--accent-dim),
-    var(--accent),
-    var(--accent2),
-    var(--accent-dim),
-    var(--glass-border));
-  animation: spinBorder 4s linear infinite;
+    transparent 0deg,
+    transparent 280deg,
+    var(--accent-dim) 310deg,
+    var(--accent) 335deg,
+    color-mix(in srgb, var(--accent2) 60%, white) 350deg,
+    var(--accent) 360deg,
+    transparent 20deg,
+    transparent 360deg);
+  animation: droplet 18s cubic-bezier(.45,.05,.55,.95) infinite;
   pointer-events: none;
+  will-change: --border-angle;
 }
-.liquid-b--alt::after {
-  content: '';
-  position: absolute;
-  inset: -1.5px;
-  border-radius: inherit;
-  z-index: -1;
-  background: conic-gradient(from var(--border-angle),
-    var(--glass-border),
-    var(--accent-dim),
-    var(--accent),
-    var(--accent2),
-    var(--accent-dim),
-    var(--glass-border));
-  animation: spinBorder 4s linear infinite;
-  pointer-events: none;
-}
-@keyframes spinBorder {
+@keyframes droplet {
   to { --border-angle: 360deg; }
 }
 body {
@@ -2338,6 +2326,29 @@ function addRecent(file) {
   document.getElementById('viewport').addEventListener('contextmenu', e => {
     if (!e.target.closest('.file-item')) showViewportMenu(e);
   });
+})();
+
+// ===== LIQUID DROPLET SCROLL REACTIVITY =====
+(function() {
+  let start = performance.now();
+  let dropletEls = [];
+  function refresh() {
+    dropletEls = [...document.querySelectorAll('.liquid-b,.liquid-b--alt')];
+  }
+  refresh();
+  const obs = new MutationObserver(refresh);
+  obs.observe(document.body, { childList: true, subtree: true });
+
+  function tick(now) {
+    const sec = (now - start) / 1000;
+    const max = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+    const p = window.scrollY / max;
+    const deg = ((sec / 18) * 360 + p * 120) % 360;
+    const v = `${deg}deg`;
+    for (let i = 0; i < dropletEls.length; i++) dropletEls[i].style.setProperty('--border-angle', v);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 })();
 </script>
 </body>
