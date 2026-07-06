@@ -56,6 +56,52 @@
   --glass-depth: rgba(255, 255, 255, .05);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ===== LIQUID GLASS BORDER UTILITY ===== */
+@property --border-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+.liquid-b {
+  position: relative;
+  z-index: 0;
+}
+.liquid-b::before {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  z-index: -1;
+  background: conic-gradient(from var(--border-angle),
+    var(--glass-border),
+    var(--accent-dim),
+    var(--accent),
+    var(--accent2),
+    var(--accent-dim),
+    var(--glass-border));
+  animation: spinBorder 4s linear infinite;
+  pointer-events: none;
+}
+.liquid-b--alt::after {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  z-index: -1;
+  background: conic-gradient(from var(--border-angle),
+    var(--glass-border),
+    var(--accent-dim),
+    var(--accent),
+    var(--accent2),
+    var(--accent-dim),
+    var(--glass-border));
+  animation: spinBorder 4s linear infinite;
+  pointer-events: none;
+}
+@keyframes spinBorder {
+  to { --border-angle: 360deg; }
+}
 body {
   font-family: var(--font);
   background: var(--bg);
@@ -1049,7 +1095,7 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
 </head>
 <body>
 
-<header>
+<header class="liquid-b--alt">
   <h1><i class="fas fa-server"></i> NAS <span>| Gestor de Archivos</span></h1>
   <div class="header-actions">
     <button class="btn btn-icon" onclick="toggleView()" title="Cambiar vista" id="viewBtn" aria-label="Cambiar vista"><i class="fas fa-list"></i></button>
@@ -1058,7 +1104,7 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
     <button class="btn btn-icon" onclick="toggleTheme()" title="Tema" id="themeBtn" aria-label="Cambiar tema"><i class="fas fa-moon"></i></button>
     <div id="authArea">
       <button class="btn btn-accent" onclick="handleAuth()" id="loginBtn" aria-label="Iniciar sesión"><i class="fas fa-sign-in-alt"></i> <span>Iniciar sesión</span></button>
-      <div class="user-avatar hidden" id="userAvatar" onclick="handleSignout()" title="Cerrar sesión" role="button" tabindex="0" aria-label="Cerrar sesión">
+      <div class="user-avatar liquid-b hidden" id="userAvatar" onclick="handleSignout()" title="Cerrar sesión" role="button" tabindex="0" aria-label="Cerrar sesión">
         <i class="fas fa-user-circle"></i>
       </div>
     </div>
@@ -1067,18 +1113,18 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
 
 <main>
   <div class="search-row">
-    <div class="search-wrapper">
+    <div class="search-wrapper liquid-b">
       <i class="fas fa-search" aria-hidden="true"></i>
       <input type="text" id="searchInput" placeholder="Buscar archivos..." oninput="handleSearch(this.value)" aria-label="Buscar archivos">
     </div>
     <button class="btn btn-icon" onclick="document.getElementById('searchInput').value='';handleSearch('')" title="Limpiar" aria-label="Limpiar búsqueda"><i class="fas fa-times"></i></button>
   </div>
 
-  <nav class="breadcrumb-bar" id="breadcrumb" aria-label="Ruta de navegación"></nav>
+  <nav class="breadcrumb-bar liquid-b" id="breadcrumb" aria-label="Ruta de navegación"></nav>
 
-  <section class="toolbar" aria-label="Barra de herramientas">
+  <section class="toolbar liquid-b" aria-label="Barra de herramientas">
     <div class="toolbar-left">
-      <div class="filter-group" id="filterGroup" role="tablist" aria-label="Filtro de archivos">
+      <div class="filter-group liquid-b" id="filterGroup" role="tablist" aria-label="Filtro de archivos">
         <button class="filter-btn active" data-filter="all" onclick="setFilter('all')" role="tab" aria-selected="true">Todos</button>
         <button class="filter-btn" data-filter="folder" onclick="setFilter('folder')" role="tab" aria-selected="false"><i class="fas fa-folder"></i></button>
         <button class="filter-btn" data-filter="image" onclick="setFilter('image')" role="tab" aria-selected="false"><i class="fas fa-image"></i></button>
@@ -1102,7 +1148,7 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
   <div class="toolbar-right" id="statsBar">
     <span id="statsCount"><i class="fas fa-circle-notch"></i> Cargando...</span>
   </div>
-  <div id="selectionBar" class="selection-bar hidden">
+  <div id="selectionBar" class="selection-bar liquid-b hidden">
     <span id="selCount">0 seleccionados</span>
     <button onclick="clearSelection()"><i class="fas fa-times"></i> Quitar</button>
     <button onclick="downloadSelected()"><i class="fas fa-download"></i> Descargar</button>
@@ -1113,7 +1159,7 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
 
 <!-- Info Panel -->
 <div class="info-overlay" id="infoOverlay" onclick="toggleInfoPanel(null)"></div>
-<aside class="info-panel" id="infoPanel" aria-label="Panel de información">
+<aside class="info-panel liquid-b" id="infoPanel" aria-label="Panel de información">
   <div class="info-panel-header">
     <h3><i class="fas fa-info-circle" style="color:var(--accent)"></i> Detalles</h3>
     <button class="modal-close" onclick="toggleInfoPanel(null)"><i class="fas fa-times"></i></button>
@@ -1197,7 +1243,7 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
 
 <!-- AI Assistant -->
 <button class="ai-fab" id="aiFab" onclick="toggleAI()"><i class="fas fa-robot"></i></button>
-<div class="ai-panel" id="aiPanel">
+<div class="ai-panel liquid-b--alt" id="aiPanel">
   <div class="ai-header">
     <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
       <h3><i class="fas fa-sparkles"></i> Asistente IA</h3>
@@ -1399,7 +1445,7 @@ function renderFiles(files) {
     const thumb = f.thumbnailLink || (type === 'image' ? `https://lh3.googleusercontent.com/d/${f.id}=w400` : '');
     const sel = selectedFiles.has(f.id) ? 'selected' : '';
     const nameHtml = viewMode === 'list' ? highlightText(f.name, searchTerm) : f.name;
-    return `<div class="file-item ${type} ${sel} file-fade-enter" data-id="${f.id}" data-index="${idx}" tabindex="0"
+    return `<div class="file-item ${type} ${sel} file-fade-enter liquid-b" data-id="${f.id}" data-index="${idx}" tabindex="0"
       onclick="handleClick(event,'${f.id}',${idx})"
       ondblclick="handleDblClick('${f.id}')"
       oncontextmenu="showContextMenu(event,'${f.id}')">
