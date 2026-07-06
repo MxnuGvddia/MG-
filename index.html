@@ -863,10 +863,12 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
   font-size: 12px;
   color: var(--text2);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  column-gap: 18px;
+  row-gap: 4px;
 }
-.ai-body .context-info span { display: flex; align-items: center; gap: 6px; }
+.ai-body .context-info span { display: inline-flex; align-items: center; gap: 6px; }
 .ai-body .context-info i { width: 14px; text-align: center; color: var(--accent); }
 .ai-footer {
   padding: 12px 16px;
