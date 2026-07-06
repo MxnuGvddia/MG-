@@ -66,6 +66,8 @@
 .liquid-b, .liquid-b--alt {
   position: relative;
   z-index: 0;
+  border: 1.5px solid transparent;
+  background-clip: padding-box;
 }
 .liquid-b::before, .liquid-b--alt::after {
   content: '';
@@ -73,7 +75,7 @@
   inset: -1.5px;
   border-radius: inherit;
   z-index: -1;
-  opacity: .3;
+  opacity: .7;
   background: conic-gradient(from var(--border-angle),
     transparent 0deg,
     transparent 280deg,
