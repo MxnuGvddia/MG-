@@ -29,10 +29,11 @@
   --mono: 'JetBrains Mono', monospace;
   --glow: 0 0 20px rgba(56,189,248,.08);
   --spring: cubic-bezier(0.34, 4.5, 0.64, 1);
-  --glass-bg: rgba(26, 35, 50, .25);
-  --glass-border: rgba(42, 58, 78, .5);
-  --glass-shadow: 0 12px 48px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06);
-  --glass-shine: linear-gradient(180deg, rgba(255,255,255,.1) 0%, transparent 100%);
+  --glass-bg: rgba(26, 35, 50, .15);
+  --glass-border: rgba(255, 255, 255, .08);
+  --glass-shadow: 0 20px 60px rgba(0,0,0,.55), 0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06);
+  --glass-shine: linear-gradient(180deg, rgba(255,255,255,.12) 0%, transparent 100%);
+  --glass-depth: rgba(26, 35, 50, .06);
 }
 [data-theme="light"] {
   --bg: #f8fafc;
@@ -48,10 +49,11 @@
   --shadow: rgba(0,0,0,.08);
   --glow: none;
   --spring: cubic-bezier(0.34, 4.5, 0.64, 1);
-  --glass-bg: rgba(255, 255, 255, .2);
-  --glass-border: rgba(203, 213, 225, .5);
-  --glass-shadow: 0 12px 48px rgba(0,0,0,.12), 0 0 0 1px rgba(255,255,255,.5);
-  --glass-shine: linear-gradient(180deg, rgba(255,255,255,.6) 0%, transparent 100%);
+  --glass-bg: rgba(255, 255, 255, .15);
+  --glass-border: rgba(255, 255, 255, .25);
+  --glass-shadow: 0 20px 60px rgba(0,0,0,.10), 0 8px 24px rgba(0,0,0,.06), 0 0 0 1px rgba(255,255,255,.5);
+  --glass-shine: linear-gradient(180deg, rgba(255,255,255,.7) 0%, transparent 100%);
+  --glass-depth: rgba(255, 255, 255, .05);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -60,6 +62,17 @@ body {
   color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 0% 20%, rgba(56,189,248,.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 80%, rgba(192,132,252,.08) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(251,191,36,.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
 }
 a { color: var(--accent); text-decoration: none; }
 
@@ -710,6 +723,41 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
 }
 
 /* ===== AI ASSISTANT ===== */
+@keyframes siriWave {
+  0%, 100% { transform: scaleY(.35) scaleX(.8); opacity: .6; }
+  20% { transform: scaleY(.95) scaleX(1); opacity: 1; }
+  40% { transform: scaleY(.45) scaleX(.85); opacity: .7; }
+  60% { transform: scaleY(.85) scaleX(.95); opacity: .9; }
+  80% { transform: scaleY(.3) scaleX(.75); opacity: .5; }
+}
+.ai-wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 40px;
+  padding: 0 8px;
+}
+.ai-wave span {
+  width: 4px;
+  border-radius: 4px;
+  background: linear-gradient(to top, var(--accent2), var(--accent));
+  animation: siriWave 1.6s ease-in-out infinite;
+  transform-origin: bottom;
+}
+.ai-wave span:nth-child(1) { height: 12px; animation-delay: 0s; }
+.ai-wave span:nth-child(2) { height: 20px; animation-delay: .1s; }
+.ai-wave span:nth-child(3) { height: 28px; animation-delay: .2s; }
+.ai-wave span:nth-child(4) { height: 34px; animation-delay: .3s; }
+.ai-wave span:nth-child(5) { height: 28px; animation-delay: .4s; }
+.ai-wave span:nth-child(6) { height: 34px; animation-delay: .35s; }
+.ai-wave span:nth-child(7) { height: 20px; animation-delay: .15s; }
+.ai-wave span:nth-child(8) { height: 30px; animation-delay: .25s; }
+.ai-wave span:nth-child(9) { height: 16px; animation-delay: .05s; }
+.ai-wave span:nth-child(10) { height: 24px; animation-delay: .12s; }
+.ai-wave span:nth-child(11) { height: 32px; animation-delay: .28s; }
+.ai-wave span:nth-child(12) { height: 22px; animation-delay: .18s; }
+.ai-wave.loading span { background: linear-gradient(to top, var(--accent2), var(--accent)); }
 .ai-fab {
   position: fixed;
   bottom: 24px;
@@ -746,7 +794,16 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
   flex-direction: column;
   overflow: hidden;
   animation: slideUp .45s var(--spring);
-  backdrop-filter: blur(32px) saturate(185%);
+  backdrop-filter: blur(48px) saturate(200%);
+  -webkit-backdrop-filter: blur(48px) saturate(200%);
+}
+.ai-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: var(--glass-depth);
+  pointer-events: none;
 }
 .ai-panel.open { display: flex; }
 @keyframes slideUp { from { transform: translateY(100px) scale(.35); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
@@ -795,12 +852,9 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
 }
 .ai-body .quick-actions button:hover { background: var(--accent2); border-color: var(--accent2); color: #fff; }
 
-.ai-loading { display: none; justify-content: center; gap: 4px; padding: 8px; }
+.ai-loading { display: none; justify-content: center; align-items: center; padding: 8px; height: 48px; }
 .ai-loading.show { display: flex; }
-.ai-loading span { width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); animation: aiBounce 1.2s infinite; }
-.ai-loading span:nth-child(2) { animation-delay: .2s; }
-.ai-loading span:nth-child(3) { animation-delay: .4s; }
-@keyframes aiBounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-8px); } }
+.ai-loading .ai-wave span { width: 4px; border-radius: 4px; background: linear-gradient(to top, var(--accent2), var(--accent)); animation: siriWave 1.6s ease-in-out infinite; transform-origin: bottom; }
 .ai-body .context-info {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -996,41 +1050,42 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
 <header>
   <h1><i class="fas fa-server"></i> NAS <span>| Gestor de Archivos</span></h1>
   <div class="header-actions">
-    <button class="btn btn-icon" onclick="toggleView()" title="Cambiar vista" id="viewBtn"><i class="fas fa-list"></i></button>
-    <button class="btn btn-icon" onclick="toggleInfoPanel(null)" title="Info carpeta" id="infoToggleBtn"><i class="fas fa-info-circle"></i></button>
-    <button class="btn btn-primary" onclick="openUpload()" id="uploadBtn"><i class="fas fa-upload"></i> <span>Subir</span></button>
-    <button class="btn btn-icon" onclick="toggleTheme()" title="Tema" id="themeBtn"><i class="fas fa-moon"></i></button>
+    <button class="btn btn-icon" onclick="toggleView()" title="Cambiar vista" id="viewBtn" aria-label="Cambiar vista"><i class="fas fa-list"></i></button>
+    <button class="btn btn-icon" onclick="toggleInfoPanel(null)" title="Info carpeta" id="infoToggleBtn" aria-label="Información de carpeta"><i class="fas fa-info-circle"></i></button>
+    <button class="btn btn-primary" onclick="openUpload()" id="uploadBtn" aria-label="Subir archivos"><i class="fas fa-upload"></i> <span>Subir</span></button>
+    <button class="btn btn-icon" onclick="toggleTheme()" title="Tema" id="themeBtn" aria-label="Cambiar tema"><i class="fas fa-moon"></i></button>
     <div id="authArea">
-      <button class="btn btn-accent" onclick="handleAuth()" id="loginBtn"><i class="fas fa-sign-in-alt"></i> <span>Iniciar sesión</span></button>
-      <div class="user-avatar hidden" id="userAvatar" onclick="handleSignout()" title="Cerrar sesión">
+      <button class="btn btn-accent" onclick="handleAuth()" id="loginBtn" aria-label="Iniciar sesión"><i class="fas fa-sign-in-alt"></i> <span>Iniciar sesión</span></button>
+      <div class="user-avatar hidden" id="userAvatar" onclick="handleSignout()" title="Cerrar sesión" role="button" tabindex="0" aria-label="Cerrar sesión">
         <i class="fas fa-user-circle"></i>
       </div>
     </div>
   </div>
 </header>
 
-<div class="search-row">
-  <div class="search-wrapper">
-    <i class="fas fa-search"></i>
-    <input type="text" id="searchInput" placeholder="Buscar archivos..." oninput="handleSearch(this.value)">
-  </div>
-  <button class="btn btn-icon" onclick="document.getElementById('searchInput').value='';handleSearch('')" title="Limpiar"><i class="fas fa-times"></i></button>
-</div>
-
-<div class="breadcrumb-bar" id="breadcrumb"></div>
-
-<div class="toolbar">
-  <div class="toolbar-left">
-    <div class="filter-group" id="filterGroup">
-      <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Todos</button>
-      <button class="filter-btn" data-filter="folder" onclick="setFilter('folder')"><i class="fas fa-folder"></i></button>
-      <button class="filter-btn" data-filter="image" onclick="setFilter('image')"><i class="fas fa-image"></i></button>
-      <button class="filter-btn" data-filter="video" onclick="setFilter('video')"><i class="fas fa-video"></i></button>
-      <button class="filter-btn" data-filter="audio" onclick="setFilter('audio')"><i class="fas fa-music"></i></button>
-      <button class="filter-btn" data-filter="pdf" onclick="setFilter('pdf')"><i class="fas fa-file-pdf"></i></button>
-      <button class="filter-btn" data-filter="code" onclick="setFilter('code')"><i class="fas fa-code"></i></button>
-      <button class="filter-btn" data-filter="archive" onclick="setFilter('archive')"><i class="fas fa-file-archive"></i></button>
+<main>
+  <div class="search-row">
+    <div class="search-wrapper">
+      <i class="fas fa-search" aria-hidden="true"></i>
+      <input type="text" id="searchInput" placeholder="Buscar archivos..." oninput="handleSearch(this.value)" aria-label="Buscar archivos">
     </div>
+    <button class="btn btn-icon" onclick="document.getElementById('searchInput').value='';handleSearch('')" title="Limpiar" aria-label="Limpiar búsqueda"><i class="fas fa-times"></i></button>
+  </div>
+
+  <nav class="breadcrumb-bar" id="breadcrumb" aria-label="Ruta de navegación"></nav>
+
+  <section class="toolbar" aria-label="Barra de herramientas">
+    <div class="toolbar-left">
+      <div class="filter-group" id="filterGroup" role="tablist" aria-label="Filtro de archivos">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all')" role="tab" aria-selected="true">Todos</button>
+        <button class="filter-btn" data-filter="folder" onclick="setFilter('folder')" role="tab" aria-selected="false"><i class="fas fa-folder"></i></button>
+        <button class="filter-btn" data-filter="image" onclick="setFilter('image')" role="tab" aria-selected="false"><i class="fas fa-image"></i></button>
+        <button class="filter-btn" data-filter="video" onclick="setFilter('video')" role="tab" aria-selected="false"><i class="fas fa-video"></i></button>
+        <button class="filter-btn" data-filter="audio" onclick="setFilter('audio')" role="tab" aria-selected="false"><i class="fas fa-music"></i></button>
+        <button class="filter-btn" data-filter="pdf" onclick="setFilter('pdf')" role="tab" aria-selected="false"><i class="fas fa-file-pdf"></i></button>
+        <button class="filter-btn" data-filter="code" onclick="setFilter('code')" role="tab" aria-selected="false"><i class="fas fa-code"></i></button>
+        <button class="filter-btn" data-filter="archive" onclick="setFilter('archive')" role="tab" aria-selected="false"><i class="fas fa-file-archive"></i></button>
+      </div>
     <div class="sort-group">
       <label>Orden:</label>
       <select class="sort-select" id="sortSelect" onchange="applySort()">
@@ -1050,13 +1105,13 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
     <button onclick="clearSelection()"><i class="fas fa-times"></i> Quitar</button>
     <button onclick="downloadSelected()"><i class="fas fa-download"></i> Descargar</button>
   </div>
-</div>
+</section>
 
-<div id="viewport"></div>
+<section id="viewport" aria-label="Lista de archivos"></section>
 
 <!-- Info Panel -->
 <div class="info-overlay" id="infoOverlay" onclick="toggleInfoPanel(null)"></div>
-<div class="info-panel" id="infoPanel">
+<aside class="info-panel" id="infoPanel" aria-label="Panel de información">
   <div class="info-panel-header">
     <h3><i class="fas fa-info-circle" style="color:var(--accent)"></i> Detalles</h3>
     <button class="modal-close" onclick="toggleInfoPanel(null)"><i class="fas fa-times"></i></button>
@@ -1071,7 +1126,9 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
     <div class="field"><label>ID</label><div class="value" id="infoId" style="font-family:var(--mono);font-size:12px;color:var(--text2)">—</div></div>
     <div class="field"><label>MIME</label><div class="value" id="infoMime" style="font-family:var(--mono);font-size:12px;color:var(--text2);word-break:break-all">—</div></div>
   </div>
-</div>
+</aside>
+
+</main>
 
 <input type="file" id="fileInput" style="display:none" multiple onchange="handleFileSelect(event)">
 
@@ -1161,7 +1218,7 @@ header h1 span { font-weight: 300; color: var(--text2); font-size: 14px; }
   </div>
   <div class="ai-body" id="aiBody">
     <div class="message bot" id="aiWelcome">¡Hola! Pregúntame sobre tus archivos.</div>
-    <div class="ai-loading" id="aiLoading"><span></span><span></span><span></span></div>
+    <div class="ai-loading" id="aiLoading"><div class="ai-wave" aria-label="Cargando"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
     <div class="quick-actions">
       <button onclick="aiAction('files')"><i class="fas fa-folder-open"></i> Total</button>
       <button onclick="aiAction('help')"><i class="fas fa-question-circle"></i> Ayuda</button>
