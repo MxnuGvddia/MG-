@@ -85,12 +85,7 @@
     var(--accent) 360deg,
     transparent 20deg,
     transparent 360deg);
-  animation: droplet 18s cubic-bezier(.45,.05,.55,.95) infinite;
   pointer-events: none;
-  will-change: --border-angle;
-}
-@keyframes droplet {
-  to { --border-angle: 360deg; }
 }
 body {
   font-family: var(--font);
@@ -2332,7 +2327,6 @@ function addRecent(file) {
 
 // ===== LIQUID DROPLET SCROLL REACTIVITY =====
 (function() {
-  let start = performance.now();
   let dropletEls = [];
   function refresh() {
     dropletEls = [...document.querySelectorAll('.liquid-b,.liquid-b--alt')];
@@ -2341,16 +2335,14 @@ function addRecent(file) {
   const obs = new MutationObserver(refresh);
   obs.observe(document.body, { childList: true, subtree: true });
 
-  function tick(now) {
-    const sec = (now - start) / 1000;
+  function update() {
     const max = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
     const p = window.scrollY / max;
-    const deg = ((sec / 18) * 360 + p * 120) % 360;
-    const v = `${deg}deg`;
+    const v = `${(p * 360) % 360}deg`;
     for (let i = 0; i < dropletEls.length; i++) dropletEls[i].style.setProperty('--border-angle', v);
-    requestAnimationFrame(tick);
   }
-  requestAnimationFrame(tick);
+  window.addEventListener('scroll', update);
+  update();
 })();
 </script>
 </body>
